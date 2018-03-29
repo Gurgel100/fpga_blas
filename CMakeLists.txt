@@ -28,7 +28,7 @@ enable_testing()
 
 set(BLAS_KERNEL_SRC
     # Put HLS source files here
-    src/Kernel.cpp)
+    ${CMAKE_SOURCE_DIR}/src/Kernel.cpp)
 add_library(fpgablas ${BLAS_KERNEL_SRC})
 target_link_libraries(fpgablas ${CMAKE_THREAD_LIBS_INIT})
 
@@ -40,7 +40,7 @@ add_test(TestProgram TestProgram)
 # HLS setup
 set(BLAS_PROJECT_NAME "BLAS")
 string(REPLACE ";" " " BLAS_SRC_SYNTHESIS "${BLAS_KERNEL_SRC}")
-set(BLAS_ENTRY_FUNCTION "Entry")
+set(BLAS_ENTRY_FUNCTION "AddOne")
 if(BLAS_TARGET_CLOCK GREATER 0)
   set(BLAS_TARGET_TIMING "${BLAS_TARGET_CLOCK}MHz")
 else()
