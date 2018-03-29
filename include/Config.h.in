@@ -1,0 +1,3 @@
+#pragma once
+
+using Data_t = ${BLAS_DATA_TYPE};
