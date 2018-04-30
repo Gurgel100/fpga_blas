@@ -9,14 +9,16 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
   const int n = std::stoi(argv[1]);
-  std::vector<Data_t> in(n, 4);
-  std::vector<Data_t> out(n, 0);
-  AddOne(in.data(), out.data(), n);
-  for (auto &i : out) {
-    if (i != 5) {
-      std::cerr << "Mismatch: " << i << " (expected 5)" << std::endl;
-      return 1;
-    }
+  std::vector<Data_t> x(n, 4);
+  std::vector<Data_t> y(n, 4);
+  std::vector<Data_t> out(1, 0);
+  blas_xdot(x.data(), y.data(), out.data(), n);
+  Data_t expected = 4 * 4 * n;
+  if (out[0] != expected) {
+    std::cerr << "Mismatch: " << out[0] << " (expected " << expected << ')' << std::endl;
+    return 1;
+  } else {
+    std::cout << "Got correct result" << std::endl;
   }
   return 0;
 }

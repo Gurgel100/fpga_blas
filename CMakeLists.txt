@@ -2,7 +2,7 @@
 # Created: January 2018
 
 cmake_minimum_required(VERSION 2.8)
-project(nbody_hls C CXX)
+project(blas_hls C CXX)
 
 # Target options
 set(BLAS_PART_NAME "xcku115-flvb2104-2-e" CACHE STRING "Part name for HLS.")
@@ -40,7 +40,7 @@ add_test(TestProgram TestProgram)
 # HLS setup
 set(BLAS_PROJECT_NAME "BLAS")
 string(REPLACE ";" " " BLAS_SRC_SYNTHESIS "${BLAS_KERNEL_SRC}")
-set(BLAS_ENTRY_FUNCTION "AddOne")
+set(BLAS_ENTRY_FUNCTION "blas_xdot")
 if(BLAS_TARGET_CLOCK GREATER 0)
   set(BLAS_TARGET_TIMING "${BLAS_TARGET_CLOCK}MHz")
 else()
