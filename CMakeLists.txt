@@ -40,7 +40,7 @@ add_test(TestProgram TestProgram)
 # HLS setup
 set(BLAS_PROJECT_NAME "BLAS")
 string(REPLACE ";" " " BLAS_SRC_SYNTHESIS "${BLAS_KERNEL_SRC}")
-set(BLAS_ENTRY_FUNCTION "blas_xdot")
+set(BLAS_ENTRY_FUNCTION "blas_dot")
 if(BLAS_TARGET_CLOCK GREATER 0)
   set(BLAS_TARGET_TIMING "${BLAS_TARGET_CLOCK}MHz")
 else()
