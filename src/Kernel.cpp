@@ -65,7 +65,7 @@ void blas_dot_multiple(Data_t const memoryIn_X[], Data_t const memoryIn_Y[], Dat
 	HLSLIB_DATAFLOW_INIT();
 	HLSLIB_DATAFLOW_FUNCTION(ReadMemory_multiple, memoryIn_X, pipeIn_X, N, n_prod);
 	HLSLIB_DATAFLOW_FUNCTION(ReadMemory_multiple, memoryIn_Y, pipeIn_Y, N, n_prod);
-	dot_interleaved(N, n_prod, pipeIn_X, pipeIn_Y, pipeOut);
+	HLSLIB_DATAFLOW_FUNCTION(dot_interleaved, N, n_prod, pipeIn_X, pipeIn_Y, pipeOut);
 	HLSLIB_DATAFLOW_FUNCTION(WriteMemory, pipeOut, memoryOut, n_prod);
 	HLSLIB_DATAFLOW_FINALIZE();
 }
