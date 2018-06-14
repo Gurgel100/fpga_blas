@@ -28,10 +28,11 @@ void dot_interleaved(const size_t N, const size_t num_prods, Stream<Data_t> X[],
 	Data_t sums[NUM_PART_SUMS];
 	loop_dot_interleaved_part: for (size_t part = 0; part < num_partials; ++part) {
 		loop_dot_interleaved_N: for (size_t i = 0; i < N; ++i) {
-			#pragma HLS PIPELINE II=1
 			loop_dot_interleaved_s: for (int s = 0; s < NUM_PART_SUMS; ++s) {
+				#pragma HLS PIPELINE II=1
+				#pragma HLS LOOP_FLATTEN
 				const size_t current_sum = part * NUM_PART_SUMS + s;
-				HLSLIB_DATAFLOW_FUNCTION(Core::macc_step<NUM_PART_SUMS>, X[current_sum], Y[current_sum], sums, s, N);
+				Core::macc_step<NUM_PART_SUMS>(X[current_sum], Y[current_sum], sums, s, i, N);
 
 				if (i == N - 1) {
 					//In the last round we push to the output stream
