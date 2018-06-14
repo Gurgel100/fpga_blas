@@ -10,7 +10,7 @@
 #include "Core.h"
 #include <assert.h>
 
-#define NUM_PART_SUMS	11
+#define NUM_PART_SUMS	16
 
 using hlslib::Stream;
 
