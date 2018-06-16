@@ -9,13 +9,7 @@
 
 using hlslib::Stream;
 
-class Core {
-public:
-	Core() = delete;
-	Core(Core &&) = delete;
-	Core(const Core &) = delete;
-	Core &operator=(Core const &) = delete;
-	Core &operator=(Core &&) = delete;
+namespace Core {
 
 	template <size_t num_partial_sums>
 	static void macc_step(Stream<Data_t> &in_X, Stream<Data_t> &in_Y, Data_t part_sums[num_partial_sums], const size_t index, const size_t round, const size_t N) {
@@ -55,11 +49,11 @@ public:
 		#pragma HLS INLINE
 		Data_t result = 0;
 		for (size_t i = 0; i < num_partial_sums; ++i) {
-			#pragma HLS PIPELINE II=1
+			#pragma HLS PIPELINE II=10
 			result += in.Pop();
 		}
 		out.Push(result);
 	}
-};
+}
 
 #endif //BLAS_HLS_CORE_H
