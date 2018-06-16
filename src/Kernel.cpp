@@ -47,10 +47,11 @@ void blas_dot(Data_t const memoryIn_X[], const int incX, Data_t const memoryIn_Y
 	#pragma HLS DATAFLOW
 
 	Stream<Data_t> pipeIn_X("pipeIn_X"), pipeIn_Y("pipeIn_Y"), pipeOut("pipeOut");
+	DotProduct<Data_t> dotProduct(pipeOut);
 	HLSLIB_DATAFLOW_INIT();
 	HLSLIB_DATAFLOW_FUNCTION(ReadMemory, memoryIn_X, pipeIn_X, N, incX);
 	HLSLIB_DATAFLOW_FUNCTION(ReadMemory, memoryIn_Y, pipeIn_Y, N, incY);
-	dot(N, pipeIn_X, pipeIn_Y, pipeOut);
+	dotProduct.calc(N, pipeIn_X, pipeIn_Y);
 	HLSLIB_DATAFLOW_FUNCTION(WriteMemory, pipeOut, memoryOut, 1, 1);
 	HLSLIB_DATAFLOW_FINALIZE();
 }
@@ -68,10 +69,11 @@ void blas_dot_multiple(Data_t const memoryIn_X[], Data_t const memoryIn_Y[], Dat
 	#pragma HLS DATAFLOW
 
 	Stream<Data_t> pipeIn_X[n_prod], pipeIn_Y[n_prod], pipeOut;
+	DotProductInterleaved<Data_t> dotProduct(pipeOut);
 	HLSLIB_DATAFLOW_INIT();
 	HLSLIB_DATAFLOW_FUNCTION(ReadMemory_multiple, memoryIn_X, pipeIn_X, N, n_prod);
 	HLSLIB_DATAFLOW_FUNCTION(ReadMemory_multiple, memoryIn_Y, pipeIn_Y, N, n_prod);
-	HLSLIB_DATAFLOW_FUNCTION(dot_interleaved, N, n_prod, pipeIn_X, pipeIn_Y, pipeOut);
+	dotProduct.calc(N, n_prod, pipeIn_X, pipeIn_Y);
 	HLSLIB_DATAFLOW_FUNCTION(WriteMemory, pipeOut, memoryOut, n_prod, 1);
 	HLSLIB_DATAFLOW_FINALIZE();
 }
