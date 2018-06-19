@@ -30,7 +30,7 @@ static T reference_dot(const vector<T> &x, const vector<T> &y)
 int main(int argc, char const *argv[]) {
 	uniform_real_distribution<Data_t> dist(0.0, 10.0);
 	mt19937 mt;
-	for (size_t n = 1; n < 16; ++n) {
+	for (size_t n = 1; n < 64; ++n) {
 		cout << "Testing for n = " << n << ": ";
 		vector<Data_t> x(n);
 		vector<Data_t> y(n);
@@ -42,7 +42,7 @@ int main(int argc, char const *argv[]) {
 		Data_t ref = reference_dot(x, y);
 
 		vector<Data_t> out(1, 0);
-		blas_dot(x.data(), y.data(), out.data(), n);
+		blas_dot(x.data(), 1, y.data(), 1, out.data(), n);
 		printResult(ref, out[0]);
 	}
 	return 0;
