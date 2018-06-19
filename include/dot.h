@@ -8,15 +8,14 @@
 #include "hlslib/Stream.h"
 #include "hlslib/Simulation.h"
 #include "Core.h"
-#include <assert.h>
-
-#define NUM_PART_SUMS	16
 
 using hlslib::Stream;
 
 template <class Data_t>
 class DotProductBase {
 public:
+	static const size_t partialSums = 16;
+
 	DotProductBase(Stream<Data_t> &out) : out(out) {
 		#pragma HLS INLINE
 	}
@@ -28,17 +27,19 @@ protected:
 template <class Data_t>
 class DotProduct : public DotProductBase<Data_t> {
 public:
-	DotProduct(Stream<Data_t> &out) : DotProductBase<Data_t>(out), pipeIntermediate("dot.intermediatePipe", NUM_PART_SUMS) {
+	DotProduct(Stream<Data_t> &out) : DotProductBase<Data_t>(out), pipeIntermediate("dot.intermediatePipe", Parent::partialSums) {
 		#pragma HLS INLINE
 	}
 
 	void calc(const size_t N, Stream<Data_t> &X, Stream<Data_t> &Y) {
 		#pragma HLS INLINE
-		HLSLIB_DATAFLOW_FUNCTION(Core::macc<NUM_PART_SUMS>, N, X, Y, pipeIntermediate);
-		HLSLIB_DATAFLOW_FUNCTION(Core::accumulate<NUM_PART_SUMS>, pipeIntermediate, this->out);
+		HLSLIB_DATAFLOW_FUNCTION(Core::macc<Parent::partialSums>, N, X, Y, pipeIntermediate);
+		HLSLIB_DATAFLOW_FUNCTION(Core::accumulate<Parent::partialSums>, pipeIntermediate, this->out);
 	}
 
 private:
+	using Parent = DotProductBase<Data_t>;
+
 	Stream<Data_t> pipeIntermediate;
 };
 
@@ -49,31 +50,35 @@ public:
 		#pragma HLS INLINE
 	}
 
-	void calc(const size_t N, const size_t num_prods, Stream<Data_t> X[], Stream<Data_t> Y[]) {
+	void calc(const size_t N, const size_t num_prods, Stream<Data_t> &X, Stream<Data_t> &Y) {
 		#pragma HLS INLINE
 		HLSLIB_DATAFLOW_FUNCTION(calc_internal, N, num_prods, X, Y, this->out);
 	}
 
 private:
-	static void calc_internal(const size_t N, const size_t num_prods, Stream<Data_t> X[], Stream<Data_t> Y[], Stream<Data_t> &out) {
+	using Parent = DotProductBase<Data_t>;
+
+	static void calc_internal(const size_t N, const size_t num_prods, Stream<Data_t> &X, Stream<Data_t> &Y, Stream<Data_t> &out) {
 		#pragma HLS INLINE
-		assert(num_prods % NUM_PART_SUMS == 0);
-		const size_t num_partials = num_prods / NUM_PART_SUMS;
-		Data_t sums[NUM_PART_SUMS];
+		Data_t sums[Parent::partialSums];
+		const size_t num_partials = num_prods / Parent::partialSums;
+		const size_t num_remaining = num_prods % Parent::partialSums;
+
 		loop_dot_interleaved_part:
-		for (size_t part = 0; part < num_partials; ++part) {
+		for (size_t part = 0; part < num_partials + (num_remaining ? 1 : 0); ++part) {
 			loop_dot_interleaved_N:
 			for (size_t i = 0; i < N; ++i) {
 				loop_dot_interleaved_s:
-				for (int s = 0; s < NUM_PART_SUMS; ++s) {
+				for (size_t s = 0; s < Parent::partialSums; ++s) {
 					#pragma HLS PIPELINE II=1
 					#pragma HLS LOOP_FLATTEN
-					const size_t current_sum = part * NUM_PART_SUMS + s;
-					Core::macc_step<NUM_PART_SUMS>(X[current_sum], Y[current_sum], sums, s, i, N);
+					if (part < num_partials || s < num_remaining) {
+						Core::macc_step<Parent::partialSums>(X, Y, sums, s, i, N);
 
-					if (i == N - 1) {
-						//In the last round we push to the output stream
-						out.Push(sums[s]);
+						if (i == N - 1) {
+							//In the last round we push to the output stream
+							out.Push(sums[s]);
+						}
 					}
 				}
 			}
