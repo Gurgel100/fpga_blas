@@ -9,7 +9,7 @@ using namespace std;
 
 template <class T>
 static void printResult(T expected, T value) {
-	if (value != expected) {
+	if (abs(value - expected) > 1e-3) {
 		cout << "Mismatch: " << value << " (expected " << expected << ')' << endl;
 	} else {
 		cout << "Got correct result" << endl;
