@@ -12,10 +12,9 @@ using hlslib::Stream;
 namespace Core {
 
 	template <size_t num_partial_sums>
-	static void macc_step(Stream<Data_t> &in_X, Stream<Data_t> &in_Y, Data_t part_sums[num_partial_sums], const size_t index, const size_t round, const size_t N) {
+	static void macc_step(Stream<Data_t> &in_X, Stream<Data_t> &in_Y, Data_t part_sums[num_partial_sums], const size_t index, const size_t currentN, const size_t N) {
 		#pragma HLS INLINE
-		size_t currentN = round * num_partial_sums + index;
-		Data_t sum = (round == 0) ? 0 : part_sums[index];
+		Data_t sum = (currentN == 0) ? 0 : part_sums[index];
 		Data_t x = currentN < N ? in_X.Pop() : 0;
 		Data_t y = currentN < N ? in_Y.Pop() : 0;
 		part_sums[index] = sum + x * y;
@@ -28,12 +27,22 @@ namespace Core {
 		Data_t part_sums[num_partial_sums];
 
 		const size_t rounds = N / num_partial_sums;
-		macc_loop: for (size_t round = 0; round <= rounds; ++round) {
+		round_loop:
+		for (size_t round = 0; round <= rounds; ++round) {
+			partials_loop:
 			for (size_t i = 0; i < num_partial_sums; ++i) {
 				#pragma HLS PIPELINE II=1
-				macc_step<num_partial_sums>(in_X, in_Y, part_sums, i, round, N);
+				#pragma HLS LOOP_FLATTEN
+				macc_step<num_partial_sums>(in_X, in_Y, part_sums, i, round * num_partial_sums + i, N);
+
+				// FIXME: I don't know why this doesn't work
+//				if (round == rounds) {
+//					const Data_t sum = (i < N) ? part_sums[i] : 0;
+//					out.Push(sum);
+//				}
 			}
 		}
+		sum_partials_loop:
 		for (size_t i = 0; i < num_partial_sums; ++i) {
 			#pragma HLS PIPELINE II=1
 			Data_t sum = 0;
