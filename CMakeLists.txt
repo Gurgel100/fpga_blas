@@ -58,3 +58,21 @@ set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_INTERLEAVED_ENTRY_FUNCTION})
 configure_file(scripts/Synthesis.tcl.in SynthesisInterleavedDot.tcl)
 add_custom_target(synthesize_interleaved_dot
 		COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisInterleavedDot.tcl)
+
+# Test kernels
+if(SDAccel_FOUND)
+	add_custom_target(kernel_dot
+			COMMAND ${SDAccel_XOCC}
+			-t hw
+			-o kernel_dot.xclbin
+			-I${CMAKE_SOURCE_DIR}/include
+			-I${CMAKE_SOURCE_DIR}/hlslib/include
+			-I${CMAKE_BINARY_DIR}
+			${BLAS_KERNEL_SRC}
+			--kernel ${BLAS_DOT_ENTRY_FUNCTION}
+			--xdevice ${BLAS_DSA_NAME}
+			--xp prop:kernel.${BLAS_DOT_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS} -DHLSLIB_SYNTHESIS")
+	add_executable(RunDot test/RunDot.cpp)
+	add_dependencies(RunDot kernel_dot)
+	target_link_libraries(RunDot ${SDAccel_LIBRARIES})
+endif()
