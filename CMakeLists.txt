@@ -40,12 +40,21 @@ add_test(TestProgram TestProgram)
 # HLS setup
 set(BLAS_PROJECT_NAME "BLAS")
 string(REPLACE ";" " " BLAS_SRC_SYNTHESIS "${BLAS_KERNEL_SRC}")
-set(BLAS_ENTRY_FUNCTION "blas_dot")
 if(BLAS_TARGET_CLOCK GREATER 0)
   set(BLAS_TARGET_TIMING "${BLAS_TARGET_CLOCK}MHz")
 else()
   set(BLAS_TARGET_TIMING "300MHz")
 endif()
-configure_file(scripts/Synthesis.tcl.in Synthesis.tcl)
-add_custom_target(synthesis
-  COMMAND ${SDAccel_VIVADO_HLS} -f Synthesis.tcl)
+
+# Synthesis
+set(BLAS_DOT_ENTRY_FUNCTION "blas_dot")
+set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_ENTRY_FUNCTION})
+configure_file(scripts/Synthesis.tcl.in SynthesisDot.tcl)
+add_custom_target(synthesize_dot
+  COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisDot.tcl)
+
+set(BLAS_DOT_INTERLEAVED_ENTRY_FUNCTION "blas_dot_multiple")
+set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_INTERLEAVED_ENTRY_FUNCTION})
+configure_file(scripts/Synthesis.tcl.in SynthesisInterleavedDot.tcl)
+add_custom_target(synthesize_interleaved_dot
+		COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisInterleavedDot.tcl)
