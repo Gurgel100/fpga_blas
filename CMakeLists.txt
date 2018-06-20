@@ -28,7 +28,7 @@ enable_testing()
 
 set(BLAS_KERNEL_SRC
     # Put HLS source files here
-    ${CMAKE_SOURCE_DIR}/src/Kernel.cpp)
+    ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp)
 add_library(fpgablas ${BLAS_KERNEL_SRC})
 target_link_libraries(fpgablas ${CMAKE_THREAD_LIBS_INIT})
 
