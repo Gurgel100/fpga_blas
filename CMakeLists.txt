@@ -73,6 +73,5 @@ if(SDAccel_FOUND)
 			--xdevice ${BLAS_DSA_NAME}
 			--xp prop:kernel.${BLAS_DOT_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS} -DHLSLIB_SYNTHESIS")
 	add_executable(RunDot test/RunDot.cpp)
-	add_dependencies(RunDot kernel_dot)
 	target_link_libraries(RunDot ${SDAccel_LIBRARIES})
 endif()
