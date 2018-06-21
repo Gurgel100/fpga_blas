@@ -2,13 +2,13 @@
 #include "hlslib/Simulation.h"
 #include "hlslib/TreeReduce.h"
 #include "hlslib/Operators.h"
-#include "Kernel.h"
+#include "DotProduct.h"
 #include "Memory.h"
 #include "dot.h"
 
 using hlslib::Stream;
 
-void blas_dot(Data_t const memoryIn_X[], const int incX, Data_t const memoryIn_Y[], const int incY, Data_t memoryOut[], const size_t N) {
+void blas_dot(const size_t N, Data_t const memoryIn_X[], const int incX, Data_t const memoryIn_Y[], const int incY, Data_t memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
 	#pragma HLS INTERFACE m_axi port=memoryIn_Y offset=slave bundle=gmem1
 	#pragma HLS INTERFACE m_axi port=memoryOut offset=slave bundle=gmem2
@@ -31,7 +31,7 @@ void blas_dot(Data_t const memoryIn_X[], const int incX, Data_t const memoryIn_Y
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
-void blas_dot_multiple(Data_t const memoryIn_X[], Data_t const memoryIn_Y[], Data_t memoryOut[], const size_t N, const size_t n_prod) {
+void blas_dot_multiple(const size_t N, const size_t n_prod, Data_t const memoryIn_X[], Data_t const memoryIn_Y[], Data_t memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
 	#pragma HLS INTERFACE m_axi port=memoryIn_Y offset=slave bundle=gmem1
 	#pragma HLS INTERFACE m_axi port=memoryOut offset=slave bundle=gmem2
