@@ -73,7 +73,7 @@ private:
 					#pragma HLS PIPELINE II=1
 					#pragma HLS LOOP_FLATTEN
 					if (part < num_partials || s < num_remaining) {
-						Core::macc_step<Parent::partialSums>(X, Y, sums, s, i, N);
+						Core::macc_step<Parent::partialSums>(X, Y, sums, s, i, i, N);
 
 						if (i == N - 1) {
 							//In the last round we push to the output stream
