@@ -53,8 +53,8 @@ configure_file(scripts/Synthesis.tcl.in SynthesisDot.tcl)
 add_custom_target(synthesize_dot
   COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisDot.tcl)
 
-set(BLAS_DOT_INTERLEAVED_ENTRY_FUNCTION "blas_dot_multiple")
-set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_INTERLEAVED_ENTRY_FUNCTION})
+set(BLAS_DOT_MULTIPLE_ENTRY_FUNCTION "blas_dot_multiple")
+set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION})
 configure_file(scripts/Synthesis.tcl.in SynthesisInterleavedDot.tcl)
 add_custom_target(synthesize_interleaved_dot
 		COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisInterleavedDot.tcl)
@@ -74,4 +74,21 @@ if(SDAccel_FOUND)
 			--xp prop:kernel.${BLAS_DOT_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS} -DHLSLIB_SYNTHESIS")
 	add_executable(RunDot test/RunDot.cpp)
 	target_link_libraries(RunDot ${SDAccel_LIBRARIES})
+	add_test(RunDot RunDot)
+
+	add_custom_target(kernel_dot_multiple
+			COMMAND ${SDAccel_XOCC}
+			-t hw
+			-o kernel_dot_multiple.xclbin
+			-I${CMAKE_SOURCE_DIR}/include
+			-I${CMAKE_SOURCE_DIR}/hlslib/include
+			-I${CMAKE_BINARY_DIR}
+			${BLAS_KERNEL_SRC}
+			--kernel ${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}
+			--xdevice ${BLAS_DSA_NAME}
+			--xp prop:kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS} -DHLSLIB_SYNTHESIS")
+
+	# Target for building all kernels
+	add_custom_target(kernel_all)
+	add_dependencies(kernel_all kernel_dot kernel_dot_multiple)
 endif()
