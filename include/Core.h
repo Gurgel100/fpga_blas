@@ -5,14 +5,14 @@
 #ifndef BLAS_HLS_CORE_H
 #define BLAS_HLS_CORE_H
 
-#include "hlslib/Stream.h"
-
-using hlslib::Stream;
+#include <hlslib/Stream.h>
 
 namespace Core {
 
 	template <size_t num_partial_sums>
 	static void macc_step(Stream<Data_t> &in_X, Stream<Data_t> &in_Y, Data_t part_sums[num_partial_sums], const size_t index, const size_t round, const size_t currentN, const size_t N) {
+	using hlslib::Stream;
+
 		#pragma HLS INLINE
 		Data_t sum = (round == 0) ? 0 : part_sums[index];
 		Data_t x = currentN < N ? in_X.Pop() : 0;
