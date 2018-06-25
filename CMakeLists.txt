@@ -20,7 +20,7 @@ find_package(SDAccel REQUIRED)
 find_package(Threads REQUIRED)
 
 include_directories(include hlslib/include ${CMAKE_BINARY_DIR} ${SDAccel_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -gdwarf-4 -Wall -Wextra -Wno-unused-parameter -Wno-unused-label")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -gdwarf-4 -Wall -Wextra -Wno-unused-parameter -Wno-unused-label -Wno-unknown-pragmas")
 
 configure_file(include/Config.h.in Config.h)
 
