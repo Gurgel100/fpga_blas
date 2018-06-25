@@ -62,11 +62,19 @@ namespace FBLAS {
 		void calc(void) {
 			#pragma HLS INLINE
 			if (dataflow) {
-				HLSLIB_DATAFLOW_FUNCTION(Core::macc<Parent::partialSums>, this->N, this->inX, this->inY, pipeIntermediate);
-				HLSLIB_DATAFLOW_FUNCTION(Core::accumulate<Parent::partialSums>, pipeIntermediate, this->out);
+				//HLSLIB_DATAFLOW_FUNCTION(Core::macc<Data_t, Parent::partialSums>, this->N, this->inX, this->inY, pipeIntermediate);
+				//HLSLIB_DATAFLOW_FUNCTION(Core::accumulate<Data_t, Parent::partialSums>, pipeIntermediate, this->out);
+				// we can't use the HLSLIB_DATAFLOW_FUNCTION macro because of a bug in vivado hls
+				#ifndef HLSLIB_SYNTHESIS
+					hlslib::_Dataflow::Get().AddFunction(Core::macc<Data_t, Parent::partialSums>, this->N, this->inX, this->inY, pipeIntermediate);
+					hlslib::_Dataflow::Get().AddFunction(Core::accumulate<Data_t, Parent::partialSums>, pipeIntermediate, this->out);
+				#else
+					Core::macc<Data_t, Parent::partialSums>(this->N, this->inX, this->inY, pipeIntermediate);
+					Core::accumulate<Data_t, Parent::partialSums>(pipeIntermediate, this->out);
+				#endif
 			} else {
-				Core::macc<Parent::partialSums>(this->N, this->inX, this->inY, pipeIntermediate);
-				Core::accumulate<Parent::partialSums>(pipeIntermediate, this->out);
+				Core::macc<Data_t, Parent::partialSums>(this->N, this->inX, this->inY, pipeIntermediate);
+				Core::accumulate<Data_t, Parent::partialSums>(pipeIntermediate, this->out);
 			}
 		}
 
@@ -174,7 +182,7 @@ namespace FBLAS {
 						#pragma HLS PIPELINE II=1
 						#pragma HLS LOOP_FLATTEN
 						if (part < num_partials || s < num_remaining) {
-							Core::macc_step<Parent::partialSums>(X, Y, sums, s, i, i, N);
+							Core::macc_step<Data_t, Parent::partialSums>(X, Y, sums, s, i, i, N);
 
 							if (i == N - 1) {
 								//In the last round we push to the output stream
