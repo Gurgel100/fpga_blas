@@ -35,21 +35,11 @@ namespace Core {
 				#pragma HLS LOOP_FLATTEN
 				macc_step<num_partial_sums>(in_X, in_Y, part_sums, i, round, round * num_partial_sums + i, N);
 
-				// FIXME: I don't know why this doesn't work
-//				if (round == rounds) {
-//					const Data_t sum = (i < N) ? part_sums[i] : 0;
-//					out.Push(sum);
-//				}
+				if (round == rounds) {
+					const Data_t sum = (i < N) ? part_sums[i] : 0;
+					out.Push(sum);
+				}
 			}
-		}
-		sum_partials_loop:
-		for (size_t i = 0; i < num_partial_sums; ++i) {
-			#pragma HLS PIPELINE II=1
-			Data_t sum = 0;
-			if (i < N) {
-				sum = part_sums[i];
-			}
-			out.Push(sum);
 		}
 	}
 
