@@ -3,7 +3,6 @@
 #include "hlslib/TreeReduce.h"
 #include "hlslib/Operators.h"
 #include "DotProduct.h"
-#include "Memory.h"
 #include "dot.h"
 
 using hlslib::Stream;
@@ -21,13 +20,14 @@ void blas_dot(const size_t N, Data_t const memoryIn_X[], const int incX, Data_t 
 	#pragma HLS INTERFACE s_axilite port=return bundle=control
 	#pragma HLS DATAFLOW
 
-	Stream<Data_t> pipeIn_X("pipeIn_X"), pipeIn_Y("pipeIn_Y"), pipeOut("pipeOut");
-	DotProduct<Data_t> dotProduct(pipeOut);
 	HLSLIB_DATAFLOW_INIT();
-	HLSLIB_DATAFLOW_FUNCTION(Memory::ReadMemory<Data_t>, memoryIn_X, pipeIn_X, N, incX);
-	HLSLIB_DATAFLOW_FUNCTION(Memory::ReadMemory<Data_t>, memoryIn_Y, pipeIn_Y, N, incY);
-	dotProduct.calc(N, pipeIn_X, pipeIn_Y);
-	HLSLIB_DATAFLOW_FUNCTION(Memory::WriteMemory<Data_t>, pipeOut, memoryOut, 1, 1);
+
+	FBLAS::DotProduct<Data_t> dotProduct(N, incX, incY);
+	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X);
+	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y);
+	dotProduct.calc<true>();
+	dotProduct.getWriter().writeToMemory<true>(memoryOut);
+
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
@@ -43,18 +43,13 @@ void blas_dot_multiple(const size_t N, const size_t n_prod, Data_t const memoryI
 	#pragma HLS INTERFACE s_axilite port=return bundle=control
 	#pragma HLS DATAFLOW
 
-	Stream<Data_t> pipeIn_X("pipeIn_X"), pipeIn_Y("pipeIn_Y"), pipeOut("pipeOut");
-	DotProductInterleaved<Data_t> dotProduct(pipeOut);
 	HLSLIB_DATAFLOW_INIT();
-	// FIXME: hack to overcome the problem of HLSLIB_DATAFLOW_FUNCTION with templated functions
-	#ifdef HLSLIB_SYNTHESIS
-		Memory::ReadMemoryInterleaved<Data_t, DotProductInterleaved<Data_t>::partialSums>(memoryIn_X, pipeIn_X, N, n_prod);
-		Memory::ReadMemoryInterleaved<Data_t, DotProductInterleaved<Data_t>::partialSums>(memoryIn_Y, pipeIn_Y, N, n_prod);
-	#else
-		HLSLIB_DATAFLOW_FUNCTION(Memory::ReadMemoryInterleaved<Data_t, DotProductInterleaved<Data_t>::partialSums>, memoryIn_X, pipeIn_X, N, n_prod);
-		HLSLIB_DATAFLOW_FUNCTION(Memory::ReadMemoryInterleaved<Data_t, DotProductInterleaved<Data_t>::partialSums>, memoryIn_Y, pipeIn_Y, N, n_prod);
-	#endif
-	dotProduct.calc(N, n_prod, pipeIn_X, pipeIn_Y);
-	HLSLIB_DATAFLOW_FUNCTION(Memory::WriteMemory<Data_t>, pipeOut, memoryOut, n_prod, 1);
+
+	FBLAS::DotProductInterleaved<Data_t> dotProduct(N, n_prod);
+	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X);
+	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y);
+	dotProduct.calc<true>();
+	dotProduct.getWriter().writeToMemory<true>(memoryOut);
+
 	HLSLIB_DATAFLOW_FINALIZE();
 }
