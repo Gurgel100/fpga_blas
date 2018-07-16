@@ -27,7 +27,7 @@ static void test_dot(ocl::Context &context, const std::string &kernelFile, const
 	const size_t maxSize = sizes.back();
 
 	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, maxSize);
-	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, maxSize);
+	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, maxSize);
 	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank0, 1);
 
 	std::vector<T> inputHostX(maxSize);
@@ -65,7 +65,7 @@ static void test_interleaved_dot(ocl::Context &context, const std::string &kerne
 	const size_t maxVectors = num_vectors.back();
 
 	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, maxVectors * maxSize);
-	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, maxVectors * maxSize);
+	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, maxVectors * maxSize);
 	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank0, maxVectors);
 
 	std::vector<T> inputHostX(maxVectors * maxSize);
