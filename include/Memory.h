@@ -37,12 +37,20 @@ namespace FBLAS {
 		private:
 			static void readFromMemory(const size_t N, const size_t increment, const T memory[], Stream<T> &pipe) {
 				#pragma HLS INLINE
-				size_t currentLoc = 0;
-				MemoryReader_read_loop:
-				for (size_t i = 0; i < N; ++i) {
-					#pragma HLS PIPELINE II=1
-					pipe.Push(memory[currentLoc]);
-					currentLoc += increment;
+				if (increment == 1) {
+					MemoryReader_read_loop:
+					for (size_t i = 0; i < N; ++i) {
+						#pragma HLS PIPELINE II=1
+						pipe.Push(memory[i]);
+					}
+				} else {
+					size_t currentLoc = 0;
+					MemoryReader_read_increment_loop:
+					for (size_t i = 0; i < N; ++i) {
+						#pragma HLS PIPELINE II=1
+						pipe.Push(memory[currentLoc]);
+						currentLoc += increment;
+					}
 				}
 			}
 		};
@@ -71,12 +79,20 @@ namespace FBLAS {
 		private:
 			static void writeToMemory(const size_t N, const size_t increment, T memory[], Stream<T> &pipe) {
 				#pragma HLS INLINE
-				size_t currentLoc = 0;
-				MemoryWriter_write_loop:
-				for (size_t i = 0; i < N; ++i) {
-					#pragma HLS PIPELINE II=1
-					memory[currentLoc] = pipe.Pop();
-					currentLoc += increment;
+				if (increment == 1) {
+					MemoryWriter_write_loop:
+					for (size_t i = 0; i < N; ++i) {
+						#pragma HLS PIPELINE II=1
+						memory[i] = pipe.Pop();
+					}
+				} else {
+					size_t currentLoc = 0;
+					MemoryWriter_write_increment_loop:
+					for (size_t i = 0; i < N; ++i) {
+						#pragma HLS PIPELINE II=1
+						memory[currentLoc] = pipe.Pop();
+						currentLoc += increment;
+					}
 				}
 			}
 		};
