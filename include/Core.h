@@ -52,7 +52,7 @@ namespace FBLAS {
 			T result = 0;
 			accumulate_loop:
 			for (size_t i = 0; i < num_partial_sums; ++i) {
-				#pragma HLS PIPELINE II=10
+				#pragma HLS PIPELINE II=1
 				result += in.Pop();
 			}
 			out.Push(result);
