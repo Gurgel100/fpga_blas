@@ -47,17 +47,21 @@ else()
 endif()
 
 # Synthesis
+function(synthesise name entry)
+	if (${ARGC} GREATER 2)
+		set(BLAS_TARGET_CLOCK ${ARGV2})
+	endif ()
+	set(BLAS_ENTRY_FUNCTION ${entry})
+	configure_file(scripts/Synthesis.tcl.in Synthesis_${name}.tcl)
+	add_custom_target(synthesize_${name}
+			COMMAND ${SDAccel_VIVADO_HLS} -f Synthesis_${name}.tcl)
+endfunction(synthesise)
+
 set(BLAS_DOT_ENTRY_FUNCTION "blas_dot")
-set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_ENTRY_FUNCTION})
-configure_file(scripts/Synthesis.tcl.in SynthesisDot.tcl)
-add_custom_target(synthesize_dot
-  COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisDot.tcl)
+synthesise("dot" ${BLAS_DOT_ENTRY_FUNCTION})
 
 set(BLAS_DOT_MULTIPLE_ENTRY_FUNCTION "blas_dot_multiple")
-set(BLAS_ENTRY_FUNCTION ${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION})
-configure_file(scripts/Synthesis.tcl.in SynthesisInterleavedDot.tcl)
-add_custom_target(synthesize_interleaved_dot
-		COMMAND ${SDAccel_VIVADO_HLS} -f SynthesisInterleavedDot.tcl)
+synthesise("interleaved_dot" ${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION})
 
 # Test kernels
 if(SDAccel_FOUND)
