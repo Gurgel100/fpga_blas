@@ -20,9 +20,9 @@ namespace FBLAS {
 	public:
 		static const size_t partialSums = 16;
 
-		DotProductBase(const size_t N, const size_t incX, const size_t incY)
+		DotProductBase(const size_t N)
 				: inX("DotProductBase_inX"), inY("DotProductBase_inY"), out("DotProductBase_out"), N(N),
-				  memoryReaderX(inX, N, incX), memoryReaderY(inY, N, incY), memoryWriter(out, 1, 1) {
+				  memoryReaderX(inX, N), memoryReaderY(inY, N), memoryWriter(out, 1) {
 			#pragma HLS INLINE
 		}
 
@@ -53,8 +53,8 @@ namespace FBLAS {
 	template <class Data_t>
 	class DotProduct : public DotProductBase<Data_t> {
 	public:
-		DotProduct(const size_t N, const size_t incX, const size_t incY)
-				: DotProductBase<Data_t>(N, incX, incY), pipeIntermediate("DotProduct_pipeIntermediate", Parent::partialSums) {
+		DotProduct(const size_t N)
+				: DotProductBase<Data_t>(N), pipeIntermediate("DotProduct_pipeIntermediate", Parent::partialSums) {
 			#pragma HLS INLINE
 		}
 
@@ -89,7 +89,7 @@ namespace FBLAS {
 		class MemoryReaderInterleaved : MemoryReader<T> {
 		public:
 			MemoryReaderInterleaved(Stream<T> &pipe, const size_t N, const size_t numVectors)
-					: MemoryReader<T>(pipe, N, 1), num_partitions(numVectors / partition_size), num_remaining(numVectors % partition_size) {
+					: MemoryReader<T>(pipe, N), num_partitions(numVectors / partition_size), num_remaining(numVectors % partition_size) {
 				#pragma HLS INLINE
 			}
 
@@ -130,9 +130,9 @@ namespace FBLAS {
 	class DotProductInterleaved : public DotProductBase<Data_t> {
 	public:
 		DotProductInterleaved(const size_t N, const size_t numVectors)
-				: DotProductBase<Data_t>(N, 1, 1), num_partitions(numVectors / Parent::partialSums),
+				: DotProductBase<Data_t>(N), num_partitions(numVectors / Parent::partialSums),
 				  num_remaining(numVectors % Parent::partialSums), memoryReaderX(this->inX, N, numVectors),
-				  memoryReaderY(this->inY, N, numVectors), memoryWriter(this->out, numVectors, 1) {
+				  memoryReaderY(this->inY, N, numVectors), memoryWriter(this->out, numVectors) {
 			#pragma HLS INLINE
 		}
 

@@ -22,9 +22,9 @@ void blas_dot(const size_t N, Data_t const memoryIn_X[], const int incX, Data_t 
 
 	HLSLIB_DATAFLOW_INIT();
 
-	FBLAS::DotProduct<Data_t> dotProduct(N, incX, incY);
-	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X);
-	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y);
+	FBLAS::DotProduct<Data_t> dotProduct(N);
+	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X, incX);
+	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y, incY);
 	dotProduct.calc<true>();
 	dotProduct.getWriter().writeToMemory<true>(memoryOut);
 

@@ -16,12 +16,12 @@ namespace FBLAS {
 		template <class T>
 		class MemoryReader {
 		public:
-			MemoryReader(Stream<T> &pipe, const size_t N, const size_t increment) : pipe(pipe), N(N), increment(increment) {
+			MemoryReader(Stream<T> &pipe, const size_t N) : pipe(pipe), N(N) {
 				#pragma HLS INLINE
 			}
 
 			template <bool dataflow = false>
-			void readFromMemory(const T memory[]) {
+			void readFromMemory(const T memory[], const size_t increment = 1) {
 				#pragma HLS INLINE
 				if (dataflow) {
 					HLSLIB_DATAFLOW_FUNCTION(readFromMemory, N, increment, memory, pipe);
@@ -32,7 +32,7 @@ namespace FBLAS {
 
 		protected:
 			Stream<T> &pipe;
-			const size_t N, increment;
+			const size_t N;
 
 		private:
 			static void readFromMemory(const size_t N, const size_t increment, const T memory[], Stream<T> &pipe) {
@@ -58,12 +58,12 @@ namespace FBLAS {
 		template <class T>
 		class MemoryWriter {
 		public:
-			MemoryWriter(Stream<T> &pipe, const size_t N, const size_t increment) : pipe(pipe), N(N), increment(increment) {
+			MemoryWriter(Stream<T> &pipe, const size_t N) : pipe(pipe), N(N) {
 				#pragma HLS INLINE
 			}
 
 			template <bool dataflow = false>
-			void writeToMemory(T memory[]) {
+			void writeToMemory(T memory[], const size_t increment = 1) {
 				#pragma HLS INLINE
 				if (dataflow) {
 					HLSLIB_DATAFLOW_FUNCTION(writeToMemory, N, increment, memory, pipe);
@@ -74,7 +74,7 @@ namespace FBLAS {
 
 		protected:
 			Stream<T> &pipe;
-			const size_t N, increment;
+			const size_t N;
 
 		private:
 			static void writeToMemory(const size_t N, const size_t increment, T memory[], Stream<T> &pipe) {
