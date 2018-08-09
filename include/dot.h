@@ -20,41 +20,36 @@ namespace FBLAS {
 	public:
 		static const size_t partialSums = 16;
 
-		DotProductBase(const size_t N)
-				: inX("DotProductBase_inX"), inY("DotProductBase_inY"), out("DotProductBase_out"), N(N),
-				  memoryReaderX(inX, N), memoryReaderY(inY, N), memoryWriter(out, 1) {
+		DotProductBase(const size_t N, Stream<T> &inX, Stream<T> &inY, Stream<T> &out)
+				: N(N), inX(inX), inY(inY), out(out) {
 			#pragma HLS INLINE
 		}
 
-		MemoryReader<T> &getReaderX(void) {
+		MemoryReader<T> getReaderX(void) {
 			#pragma HLS INLINE
-			return memoryReaderX;
+			return MemoryReader<T>(inX, N);
 		}
 
-		MemoryReader<T> &getReaderY(void) {
+		MemoryReader<T> getReaderY(void) {
 			#pragma HLS INLINE
-			return memoryReaderY;
+			return MemoryReader<T>(inY, N);
 		}
 
-		MemoryWriter<T> &getWriter(void) {
+		MemoryWriter<T> getWriter(void) {
 			#pragma HLS INLINE
-			return memoryWriter;
+			return MemoryWriter<T>(out, 1);
 		}
 
 	protected:
-		Stream<T> inX, inY, out;
+		Stream<T> &inX, &inY, &out;
 		const size_t N;
-
-	private:
-		MemoryReader<T> memoryReaderX, memoryReaderY;
-		MemoryWriter<T> memoryWriter;
 	};
 
 	template <class Data_t>
 	class DotProduct : public DotProductBase<Data_t> {
 	public:
-		DotProduct(const size_t N)
-				: DotProductBase<Data_t>(N), pipeIntermediate("DotProduct_pipeIntermediate", Parent::partialSums) {
+		DotProduct(const size_t N, Stream<Data_t> &inX, Stream<Data_t> &inY, Stream<Data_t> &out)
+				: DotProductBase<Data_t>(N, inX, inY, out), pipeIntermediate("DotProduct_pipeIntermediate", Parent::partialSums) {
 			#pragma HLS INLINE
 		}
 
@@ -129,10 +124,9 @@ namespace FBLAS {
 	template <class Data_t>
 	class DotProductInterleaved : public DotProductBase<Data_t> {
 	public:
-		DotProductInterleaved(const size_t N, const size_t numVectors)
-				: DotProductBase<Data_t>(N), num_partitions(numVectors / Parent::partialSums),
-				  num_remaining(numVectors % Parent::partialSums), memoryReaderX(this->inX, N, numVectors),
-				  memoryReaderY(this->inY, N, numVectors), memoryWriter(this->out, numVectors) {
+		DotProductInterleaved(const size_t N, const size_t numVectors, Stream<Data_t> &inX, Stream<Data_t> &inY, Stream<Data_t> &out)
+				: DotProductBase<Data_t>(N, inX, inY, out), numVectors(numVectors), num_partitions(numVectors / Parent::partialSums),
+				  num_remaining(numVectors % Parent::partialSums) {
 			#pragma HLS INLINE
 		}
 
@@ -146,27 +140,25 @@ namespace FBLAS {
 			}
 		}
 
-		MemoryReaderInterleaved<Data_t, DotProductInterleaved::partialSums> &getReaderX(void) {
+		MemoryReaderInterleaved<Data_t, DotProductInterleaved::partialSums> getReaderX(void) {
 			#pragma HLS INLINE
-			return memoryReaderX;
+			return MemoryReaderInterleaved<Data_t, Parent::partialSums>(this->inX, this->N, numVectors);
 		}
 
-		MemoryReaderInterleaved<Data_t, DotProductInterleaved::partialSums> &getReaderY(void) {
+		MemoryReaderInterleaved<Data_t, DotProductInterleaved::partialSums> getReaderY(void) {
 			#pragma HLS INLINE
-			return memoryReaderY;
+			return MemoryReaderInterleaved<Data_t, Parent::partialSums>(this->inY, this->N, numVectors);
 		}
 
-		MemoryWriter<Data_t> &getWriter(void) {
+		MemoryWriter<Data_t> getWriter(void) {
 			#pragma HLS INLINE
-			return memoryWriter;
+			return MemoryWriter<Data_t>(this->out, numVectors);
 		}
 
 	private:
 		using Parent = DotProductBase<Data_t>;
 
-		const size_t num_partitions, num_remaining;
-		MemoryReaderInterleaved<Data_t, Parent::partialSums> memoryReaderX, memoryReaderY;
-		MemoryWriter<Data_t> memoryWriter;
+		const size_t numVectors, num_partitions, num_remaining;
 
 		static void calc_internal(const size_t N, const size_t num_partials, const size_t num_remaining, Stream<Data_t> &X, Stream<Data_t> &Y,
 		                          Stream<Data_t> &out) {

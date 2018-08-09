@@ -20,9 +20,11 @@ void blas_dot(const size_t N, Data_t const memoryIn_X[], const int incX, Data_t 
 	#pragma HLS INTERFACE s_axilite port=return bundle=control
 	#pragma HLS DATAFLOW
 
+	Stream<Data_t> inX("blas_dot_inX"), inY("blas_dot_inY"), out("blas_dot_out");
+
 	HLSLIB_DATAFLOW_INIT();
 
-	FBLAS::DotProduct<Data_t> dotProduct(N);
+	FBLAS::DotProduct<Data_t> dotProduct(N, inX, inY, out);
 	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X, incX);
 	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y, incY);
 	dotProduct.calc<true>();
@@ -43,9 +45,11 @@ void blas_dot_multiple(const size_t N, const size_t n_prod, Data_t const memoryI
 	#pragma HLS INTERFACE s_axilite port=return bundle=control
 	#pragma HLS DATAFLOW
 
+	Stream<Data_t> inX, inY, out;
+
 	HLSLIB_DATAFLOW_INIT();
 
-	FBLAS::DotProductInterleaved<Data_t> dotProduct(N, n_prod);
+	FBLAS::DotProductInterleaved<Data_t> dotProduct(N, n_prod, inX, inY, out);
 	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X);
 	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y);
 	dotProduct.calc<true>();
