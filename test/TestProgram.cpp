@@ -6,6 +6,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 #include "DotProduct.h"
+#include "cblas.h"
 
 using namespace std;
 
@@ -27,6 +28,18 @@ static T reference_dot(const size_t N, const vector<T> &x, const vector<T> &y)
 		res += x[i] * y[i];
 	}
 	return res;
+}
+
+template <>
+double reference_dot<double>(const size_t N, const std::vector<double> &x, const std::vector<double> &y)
+{
+	return cblas_ddot(static_cast<int>(N), x.data(), 1, y.data(), 1);
+}
+
+template <>
+float reference_dot<float>(const size_t N, const std::vector<float> &x, const std::vector<float> &y)
+{
+	return cblas_sdot(static_cast<int>(N), x.data(), 1, y.data(), 1);
 }
 
 TEST_CASE("blas_dot") {

@@ -7,19 +7,20 @@
 #include <vector>
 #include <random>
 #include <strstream>
+#include <cblas.h>
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 
 using namespace hlslib;
 
-template <class T>
-static T reference_dot(const std::vector<T> &x, const std::vector<T> &y, const size_t N)
+static double reference_dot(const std::vector<double> &x, const std::vector<double> &y, const size_t N)
 {
-    T res = 0;
-    for (size_t i = 0; i < N; ++i) {
-        res += x[i] * y[i];
-    }
-    return res;
+	return cblas_ddot(static_cast<int>(N), x.data(), 1, y.data(), 1);
+}
+
+static float reference_dot(const std::vector<float> &x, const std::vector<float> &y, const size_t N)
+{
+	return cblas_sdot(static_cast<int>(N), x.data(), 1, y.data(), 1);
 }
 
 template <typename T>
@@ -101,7 +102,7 @@ static void test_interleaved_dot(ocl::Context &context, const std::string &kerne
 
 						auto refX = std::vector<T>(beginRefX, beginRefX + size);
 						auto refY = std::vector<T>(beginRefY, beginRefY + size);
-						auto reference = reference_dot<T>(refX, refY, size);
+						auto reference = reference_dot(refX, refY, size);
 						REQUIRE(outputHost[i] == Approx(reference));
 					}
 				}

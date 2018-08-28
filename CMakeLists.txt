@@ -35,7 +35,7 @@ target_link_libraries(fpgablas ${CMAKE_THREAD_LIBS_INIT})
 
 # Host test file
 add_executable(TestProgram test/TestProgram.cpp)
-target_link_libraries(TestProgram ${SDAccel_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} fpgablas)
+target_link_libraries(TestProgram ${SDAccel_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} fpgablas blas)
 add_test(TestProgram TestProgram)
 
 # HLS setup
@@ -82,7 +82,7 @@ if(SDAccel_FOUND)
 			--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
 			--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI)
 	add_executable(RunDot test/RunDot.cpp)
-	target_link_libraries(RunDot ${SDAccel_LIBRARIES})
+	target_link_libraries(RunDot ${SDAccel_LIBRARIES} blas)
 	add_test(RunDot RunDot)
 
 	add_custom_target(kernel_dot_multiple
