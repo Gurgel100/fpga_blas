@@ -42,17 +42,30 @@ float reference_dot<float>(const size_t N, const std::vector<float> &x, const st
 	return cblas_sdot(static_cast<int>(N), x.data(), 1, y.data(), 1);
 }
 
+template <class T, int width>
+static T reference_dot(size_t N, const std::vector<hlslib::DataPack<T, width>> &x, const std::vector<hlslib::DataPack<T, width>> &y) {
+	std::vector<T> tmpX(N * width), tmpY(N * width);
+	for (size_t i = 0; i < N / width; ++i) {
+		for (int j = 0; j < width; ++j) {
+			tmpX[i * width + j] = x[i][j];
+			tmpY[i * width + j] = y[i][j];
+		}
+	}
+	return reference_dot(N, tmpX, tmpY);
+}
+
 TEST_CASE("blas_dot") {
-	const size_t maxSize = 32;
-	vector<Data_t> x(maxSize), y(maxSize), out(1);
+	const size_t maxSize = 10;
+	vector<hlslib::DataPack<Data_t, dot_width>> x(maxSize), y(maxSize);
+	Data_t out;
 	fill(x);
 	fill(y);
 
 	for (size_t n = 1; n < maxSize; ++n) {
 		SECTION("Vectors of size " + to_string(n)) {
-			Data_t ref = reference_dot(n, x, y);
-			blas_dot(n, x.data(), 1, y.data(), 1, out.data());
-			REQUIRE(out[0] == Approx(ref));
+			Data_t ref = reference_dot(n * dot_width, x, y);
+			blas_dot(n * dot_width, x.data(), y.data(), &out);
+			REQUIRE(out == Approx(ref));
 		}
 	}
 }
