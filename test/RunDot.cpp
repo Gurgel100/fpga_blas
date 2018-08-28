@@ -27,10 +27,6 @@ template <typename T>
 static void test_dot(ocl::Context &context, const std::string &kernelFile, const std::vector<size_t> &sizes) {
 	const size_t maxSize = sizes.back();
 
-	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, maxSize);
-	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, maxSize);
-	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank0, 1);
-
 	std::vector<T> inputHostX(maxSize);
 	std::vector<T> inputHostY(maxSize);
 	std::array<T, 1> outputHost;
@@ -43,8 +39,9 @@ static void test_dot(ocl::Context &context, const std::string &kernelFile, const
 		inputHostY[i] = dist(re);
 	}
 
-	inputDeviceX.CopyFromHost(inputHostX.data());
-	inputDeviceY.CopyFromHost(inputHostY.data());
+	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, inputHostX.cbegin(), inputHostX.cend());
+	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, inputHostY.cbegin(), inputHostY.cend());
+	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank0, outputHost.begin(), outputHost.end());
 
 	auto program = context.MakeProgram(kernelFile + ".xclbin");
 
@@ -65,10 +62,6 @@ static void test_interleaved_dot(ocl::Context &context, const std::string &kerne
 	const size_t maxSize = sizes.back();
 	const size_t maxVectors = num_vectors.back();
 
-	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, maxVectors * maxSize);
-	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, maxVectors * maxSize);
-	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank0, maxVectors);
-
 	std::vector<T> inputHostX(maxVectors * maxSize);
 	std::vector<T> inputHostY(maxVectors * maxSize);
 	std::vector<T> outputHost(maxVectors);
@@ -81,8 +74,9 @@ static void test_interleaved_dot(ocl::Context &context, const std::string &kerne
 		inputHostY[i] = dist(re);
 	}
 
-	inputDeviceX.CopyFromHost(inputHostX.data());
-	inputDeviceY.CopyFromHost(inputHostY.data());
+	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, inputHostX.cbegin(), inputHostX.cend());
+	auto inputDeviceY = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, inputHostY.cbegin(), inputHostY.cend());
+	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank0, outputHost.begin(), outputHost.end());
 
 	auto program = context.MakeProgram(kernelFile + ".xclbin");
 
