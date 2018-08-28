@@ -11,6 +11,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 
+#define dot_width   16
+
 using namespace hlslib;
 
 static double reference_dot(const std::vector<double> &x, const std::vector<double> &y, const size_t N)
@@ -27,9 +29,9 @@ template <typename T>
 static void test_dot(ocl::Context &context, const std::string &kernelFile, const std::vector<size_t> &sizes) {
 	const size_t maxSize = sizes.back();
 
-	std::vector<T> inputHostX(maxSize);
-	std::vector<T> inputHostY(maxSize);
-	std::array<T, 1> outputHost;
+	std::vector<T> inputHostX(maxSize * dot_width);
+	std::vector<T> inputHostY(maxSize * dot_width);
+	std::array<T, 1> outputHost = {0};
 	std::random_device rd;
 	std::default_random_engine re(rd());
 	std::uniform_real_distribution<T> dist(-10, 10);
@@ -47,11 +49,11 @@ static void test_dot(ocl::Context &context, const std::string &kernelFile, const
 
 	for (auto &size : sizes) {
 		SECTION("Vector of size " + std::to_string(size)) {
-			auto kernel = program.MakeKernel("blas_dot", size, inputDeviceX, 1, inputDeviceY, 1, outputDevice);
+			auto kernel = program.MakeKernel("blas_dot", size * dot_width, inputDeviceX, inputDeviceY, outputDevice);
 			kernel.ExecuteTask();
 
 			outputDevice.CopyToHost(outputHost.data());
-			auto reference = reference_dot<T>(inputHostX, inputHostY, size);
+			auto reference = reference_dot(inputHostX, inputHostY, size * dot_width);
 			REQUIRE(outputHost[0] == Approx(reference));
 		}
 	}
@@ -107,7 +109,7 @@ static void test_interleaved_dot(ocl::Context &context, const std::string &kerne
 
 TEST_CASE("Dot", "[Dot]") {
 	std::vector<size_t> sizes;
-	for (size_t i = 1; i <= 32; ++i) {
+	for (size_t i = 1; i <= 16; ++i) {
 		sizes.push_back(i);
 	}
 
