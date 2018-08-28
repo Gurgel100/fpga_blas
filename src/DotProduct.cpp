@@ -1,3 +1,4 @@
+#include <hlslib/DataPack.h>
 #include "hlslib/Stream.h"
 #include "hlslib/Simulation.h"
 #include "hlslib/TreeReduce.h"
@@ -7,26 +8,27 @@
 
 using hlslib::Stream;
 
-void blas_dot(const size_t N, Data_t const memoryIn_X[], const int incX, Data_t const memoryIn_Y[], const int incY, Data_t memoryOut[]) {
+using DotProduct = FBLAS::DotProduct<Data_t, dot_width>;
+
+void blas_dot(const size_t N, DotProduct::Chunk const memoryIn_X[], DotProduct::Chunk const memoryIn_Y[], Data_t memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
 	#pragma HLS INTERFACE m_axi port=memoryIn_Y offset=slave bundle=gmem1
 	#pragma HLS INTERFACE m_axi port=memoryOut offset=slave bundle=gmem2
 	#pragma HLS INTERFACE s_axilite port=memoryIn_X bundle=control
-	#pragma HLS INTERFACE s_axilite port=incX bundle=control
 	#pragma HLS INTERFACE s_axilite port=memoryIn_Y bundle=control
-	#pragma HLS INTERFACE s_axilite port=incY bundle=control
 	#pragma HLS INTERFACE s_axilite port=memoryOut bundle=control
 	#pragma HLS INTERFACE s_axilite port=N bundle=control
 	#pragma HLS INTERFACE s_axilite port=return bundle=control
 	#pragma HLS DATAFLOW
 
-	Stream<Data_t> inX("blas_dot_inX"), inY("blas_dot_inY"), out("blas_dot_out");
+	Stream<DotProduct::Chunk> inX("blas_dot_inX"), inY("blas_dot_inY");
+	Stream<Data_t> out("blas_dot_out");
 
 	HLSLIB_DATAFLOW_INIT();
 
-	FBLAS::DotProduct<Data_t> dotProduct(N, inX, inY, out);
-	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X, incX);
-	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y, incY);
+	DotProduct dotProduct(N, inX, inY, out);
+	dotProduct.getReaderX().readFromMemory<true>(memoryIn_X, 1);
+	dotProduct.getReaderY().readFromMemory<true>(memoryIn_Y, 1);
 	dotProduct.calc<true>();
 	dotProduct.getWriter().writeToMemory<true>(memoryOut);
 

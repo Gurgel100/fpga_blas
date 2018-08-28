@@ -7,6 +7,9 @@
 
 #include "hlslib/Stream.h"
 #include "hlslib/Simulation.h"
+#include <hlslib/DataPack.h>
+#include <hlslib/TreeReduce.h>
+#include <hlslib/Operators.h>
 #include "Core.h"
 #include "Memory.h"
 
@@ -15,24 +18,26 @@ namespace FBLAS {
 	using namespace Memory;
 	using hlslib::Stream;
 
-	template <class T>
+	template <class T, size_t width = 1>
 	class DotProductBase {
 	public:
+		using Chunk = hlslib::DataPack<T, width>;
+
 		static const size_t partialSums = 16;
 
-		DotProductBase(const size_t N, Stream<T> &inX, Stream<T> &inY, Stream<T> &out)
+		DotProductBase(const size_t N, Stream<Chunk> &inX, Stream<Chunk> &inY, Stream<T> &out)
 				: N(N), inX(inX), inY(inY), out(out) {
 			#pragma HLS INLINE
 		}
 
-		MemoryReader<T> getReaderX(void) {
+		MemoryReader<Chunk> getReaderX(void) {
 			#pragma HLS INLINE
-			return MemoryReader<T>(inX, N);
+			return MemoryReader<Chunk>(inX, N / width);
 		}
 
-		MemoryReader<T> getReaderY(void) {
+		MemoryReader<Chunk> getReaderY(void) {
 			#pragma HLS INLINE
-			return MemoryReader<T>(inY, N);
+			return MemoryReader<Chunk>(inY, N / width);
 		}
 
 		MemoryWriter<T> getWriter(void) {
@@ -41,15 +46,16 @@ namespace FBLAS {
 		}
 
 	protected:
-		Stream<T> &inX, &inY, &out;
 		const size_t N;
+		Stream<Chunk> &inX, &inY;
+		Stream<T> &out;
 	};
 
-	template <class Data_t>
-	class DotProduct : public DotProductBase<Data_t> {
+	template <class T, size_t width = 1>
+	class DotProduct : public DotProductBase<T, width> {
 	public:
-		DotProduct(const size_t N, Stream<Data_t> &inX, Stream<Data_t> &inY, Stream<Data_t> &out)
-				: DotProductBase<Data_t>(N, inX, inY, out), pipeIntermediate("DotProduct_pipeIntermediate", Parent::partialSums) {
+		DotProduct(const size_t N, Stream<hlslib::DataPack<T, width>> &inX, Stream<hlslib::DataPack<T, width>> &inY, Stream<T> &out)
+				: Parent(N, inX, inY, out), pipeIntermediate("DotProduct_pipeIntermediate", Parent::partialSums) {
 			#pragma HLS INLINE
 		}
 
@@ -61,22 +67,25 @@ namespace FBLAS {
 				//HLSLIB_DATAFLOW_FUNCTION(Core::accumulate<Data_t, Parent::partialSums>, pipeIntermediate, this->out);
 				// we can't use the HLSLIB_DATAFLOW_FUNCTION macro because of a bug in vivado hls
 				#ifndef HLSLIB_SYNTHESIS
-					hlslib::_Dataflow::Get().AddFunction(Core::macc<Data_t, Parent::partialSums>, this->N, this->inX, this->inY, pipeIntermediate);
-					hlslib::_Dataflow::Get().AddFunction(Core::accumulate<Data_t, Parent::partialSums>, pipeIntermediate, this->out);
+					hlslib::_Dataflow::Get().AddFunction(Core::macc<typename Parent::Chunk, Parent::partialSums, T>, this->N / width, this->inX, this->inY, pipeIntermediate);
+					hlslib::_Dataflow::Get().AddFunction(Core::accumulate<typename Parent::Chunk, Parent::partialSums, T>, pipeIntermediate, pipeReduce, 0);
+					hlslib::_Dataflow::Get().AddFunction(Core::reduceDataPack<T, width, hlslib::op::Add<T>>, pipeReduce, this->out);
 				#else
-					Core::macc<Data_t, Parent::partialSums>(this->N, this->inX, this->inY, pipeIntermediate);
-					Core::accumulate<Data_t, Parent::partialSums>(pipeIntermediate, this->out);
+					Core::macc<typename Parent::Chunk, Parent::partialSums, T>(this->N / width, this->inX, this->inY, pipeIntermediate);
+					Core::accumulate<typename Parent::Chunk, Parent::partialSums, T>(pipeIntermediate, pipeReduce);
+					Core::reduceDataPack<T, width, hlslib::op::Add<T>>(pipeReduce, this->out);
 				#endif
 			} else {
-				Core::macc<Data_t, Parent::partialSums>(this->N, this->inX, this->inY, pipeIntermediate);
-				Core::accumulate<Data_t, Parent::partialSums>(pipeIntermediate, this->out);
+				Core::macc<typename Parent::Chunk, Parent::partialSums, T>(this->N / width, this->inX, this->inY, pipeIntermediate);
+				Core::accumulate<typename Parent::Chunk, Parent::partialSums, T>(pipeIntermediate, pipeReduce);
+				Core::reduceDataPack<T, width, hlslib::op::Add<T>>(pipeReduce, this->out);
 			}
 		}
 
 	private:
-		using Parent = DotProductBase<Data_t>;
+		using Parent = DotProductBase<T, width>;
 
-		Stream<Data_t> pipeIntermediate;
+		Stream<typename Parent::Chunk> pipeIntermediate, pipeReduce;
 	};
 
 	namespace Memory {
