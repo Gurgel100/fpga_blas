@@ -20,7 +20,8 @@ find_package(SDAccel REQUIRED)
 find_package(Threads REQUIRED)
 
 include_directories(include hlslib/include ${CMAKE_BINARY_DIR} ${SDAccel_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -gdwarf-4 -Wall -Wextra -Wno-unused-parameter -Wno-unused-label -Wno-unknown-pragmas")
+set(KERNEL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -gdwarf-4 -Wall -Wextra -Wno-unused-parameter -Wno-unused-label -Wno-unknown-pragmas")
 
 configure_file(include/Config.h.in Config.h)
 
@@ -75,7 +76,7 @@ if(SDAccel_FOUND)
 			${BLAS_KERNEL_SRC}
 			--kernel ${BLAS_DOT_ENTRY_FUNCTION}
 			--xdevice ${BLAS_DSA_NAME}
-			--xp prop:kernel.${BLAS_DOT_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS} -DHLSLIB_SYNTHESIS"
+			--xp prop:kernel.${BLAS_DOT_ENTRY_FUNCTION}.kernel_flags="${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS"
 			#Mapping of memory ports
 			--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
 			--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
@@ -94,7 +95,7 @@ if(SDAccel_FOUND)
 			${BLAS_KERNEL_SRC}
 			--kernel ${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}
 			--xdevice ${BLAS_DSA_NAME}
-			--xp prop:kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}.kernel_flags="${CMAKE_CXX_FLAGS} -DHLSLIB_SYNTHESIS"
+			--xp prop:kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}.kernel_flags="${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS"
 			--kernel_frequency 200
 			#Mapping of memory ports
 			--xp misc:map_connect=add.kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI

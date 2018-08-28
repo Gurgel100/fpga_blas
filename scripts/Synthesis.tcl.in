@@ -6,7 +6,7 @@
 open_project ${BLAS_PROJECT_NAME} 
 open_solution ${BLAS_PART_NAME}  
 set_part ${BLAS_PART_NAME} 
-add_files -cflags "-DBLAS_SYNTHESIS -DHLSLIB_SYNTHESIS ${CMAKE_CXX_FLAGS} -I${CMAKE_SOURCE_DIR}/include -I${CMAKE_SOURCE_DIR}/hlslib/include -I${CMAKE_BINARY_DIR}" "${BLAS_SRC_SYNTHESIS}" 
+add_files -cflags "-DBLAS_SYNTHESIS -DHLSLIB_SYNTHESIS ${KERNEL_CXX_FLAGS} -I${CMAKE_SOURCE_DIR}/include -I${CMAKE_SOURCE_DIR}/hlslib/include -I${CMAKE_BINARY_DIR}" "${BLAS_SRC_SYNTHESIS}"
 set_top ${BLAS_ENTRY_FUNCTION} 
 set_part ${BLAS_PART_NAME}
 create_clock -period ${BLAS_TARGET_CLOCK}MHz -name default
