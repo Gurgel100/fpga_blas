@@ -130,11 +130,12 @@ namespace FBLAS {
 		};
 	}
 
-	template <class Data_t>
-	class DotProductInterleaved : public DotProductBase<Data_t> {
+	template <class T, size_t width>
+	class DotProductInterleaved : public DotProductBase<T, width> {
 	public:
-		DotProductInterleaved(const size_t N, const size_t numVectors, Stream<Data_t> &inX, Stream<Data_t> &inY, Stream<Data_t> &out)
-				: DotProductBase<Data_t>(N, inX, inY, out), numVectors(numVectors), num_partitions(numVectors / Parent::partialSums),
+		DotProductInterleaved(const size_t N, const size_t numVectors, Stream<hlslib::DataPack<T, width>> &inX, Stream<hlslib::DataPack<T, width>> &inY,
+				Stream<T> &out)
+				: DotProductBase<T, width>(N, inX, inY, out), numVectors(numVectors), num_partitions(numVectors / Parent::partialSums),
 				  num_remaining(numVectors % Parent::partialSums) {
 			#pragma HLS INLINE
 		}
@@ -149,30 +150,30 @@ namespace FBLAS {
 			}
 		}
 
-		MemoryReaderInterleaved<Data_t, DotProductInterleaved::partialSums> getReaderX(void) {
+		MemoryReaderInterleaved<typename DotProductInterleaved::Chunk, DotProductInterleaved::partialSums> getReaderX(void) {
 			#pragma HLS INLINE
-			return MemoryReaderInterleaved<Data_t, Parent::partialSums>(this->inX, this->N, numVectors);
+			return MemoryReaderInterleaved<typename Parent::Chunk, Parent::partialSums>(this->inX, this->N, numVectors);
 		}
 
-		MemoryReaderInterleaved<Data_t, DotProductInterleaved::partialSums> getReaderY(void) {
+		MemoryReaderInterleaved<typename DotProductInterleaved::Chunk, DotProductInterleaved::partialSums> getReaderY(void) {
 			#pragma HLS INLINE
-			return MemoryReaderInterleaved<Data_t, Parent::partialSums>(this->inY, this->N, numVectors);
+			return MemoryReaderInterleaved<typename Parent::Chunk, Parent::partialSums>(this->inY, this->N, numVectors);
 		}
 
-		MemoryWriter<Data_t> getWriter(void) {
+		MemoryWriter<T> getWriter(void) {
 			#pragma HLS INLINE
-			return MemoryWriter<Data_t>(this->out, numVectors);
+			return MemoryWriter<T>(this->out, numVectors);
 		}
 
 	private:
-		using Parent = DotProductBase<Data_t>;
+		using Parent = DotProductBase<T, width>;
 
 		const size_t numVectors, num_partitions, num_remaining;
 
-		static void calc_internal(const size_t N, const size_t num_partials, const size_t num_remaining, Stream<Data_t> &X, Stream<Data_t> &Y,
-		                          Stream<Data_t> &out) {
+		static void calc_internal(const size_t N, const size_t num_partials, const size_t num_remaining, Stream<typename Parent::Chunk> &X,
+				Stream<typename Parent::Chunk> &Y, Stream<T> &out) {
 			#pragma HLS INLINE
-			Data_t sums[Parent::partialSums];
+			typename Parent::Chunk sums[Parent::partialSums];
 
 			loop_dot_interleaved_part:
 			for (size_t part = 0; part < num_partials + (num_remaining ? 1 : 0); ++part) {
@@ -183,11 +184,14 @@ namespace FBLAS {
 						#pragma HLS PIPELINE II=1
 						#pragma HLS LOOP_FLATTEN
 						if (part < num_partials || s < num_remaining) {
-							Core::macc_step<Data_t, Parent::partialSums>(X, Y, sums, s, i, i, N);
+							Core::macc_step<typename Parent::Chunk, Parent::partialSums, T>(X, Y, sums, s, i, i, N);
 
 							if (i == N - 1) {
 								//In the last round we push to the output stream
-								out.Push(sums[s]);
+								T tmp[width];
+								sums[s].Unpack(tmp);
+								auto res = hlslib::TreeReduce<T, hlslib::op::Add<T>, width>(tmp);
+								out.Push(res);
 							}
 						}
 					}

@@ -7,5 +7,5 @@
 
 extern "C" {
 	void blas_dot(const size_t N, hlslib::DataPack<Data_t, dot_width> const memoryIn_X[], hlslib::DataPack<Data_t, dot_width> const memoryIn_Y[], Data_t memoryOut[]);
-	void blas_dot_multiple(const size_t N, const size_t n_prod, Data_t const memoryIn_X[], Data_t const memoryIn_Y[], Data_t memoryOut[]);
+	void blas_dot_multiple(const size_t N, const size_t n_prod, hlslib::DataPack<Data_t, dot_width> const memoryIn_X[], hlslib::DataPack<Data_t, dot_width> const memoryIn_Y[], Data_t memoryOut[]);
 }

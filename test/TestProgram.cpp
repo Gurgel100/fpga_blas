@@ -71,21 +71,22 @@ TEST_CASE("blas_dot") {
 }
 
 TEST_CASE("blas_dot_multiple") {
-	const size_t maxSize = 32;
+	const size_t maxSize = 16;
 	const size_t maxVectors = 32;
 
 	for (size_t i = 1; i < maxVectors; ++i) {
 		SECTION(to_string(i) + " vectors") {
-			vector<Data_t> x(maxSize * i), y(maxSize * i), out(i);
+			vector<hlslib::DataPack<Data_t, dot_width>> x(maxSize * i), y(maxSize * i);
+			vector<Data_t> out(i);
 			fill(x);
 			fill(y);
 			for (size_t n = 1; n < maxSize; ++n) {
 				SECTION("Vectors of size " + to_string(n)) {
 					blas_dot_multiple(n, i, x.data(), y.data(), out.data());
 					for (size_t j = 0; j < i; ++j) {
-						auto tmpx = vector<Data_t>(x.begin() + j * n, x.begin() + j * n + n);
-						auto tmpy = vector<Data_t>(y.begin() + j * n, y.begin() + j * n + n);
-						Data_t reference = reference_dot(n, tmpx, tmpy);
+						auto tmpx = vector<hlslib::DataPack<Data_t, dot_width>>(x.begin() + j * n, x.begin() + j * n + n);
+						auto tmpy = vector<hlslib::DataPack<Data_t, dot_width>>(y.begin() + j * n, y.begin() + j * n + n);
+						Data_t reference = reference_dot(n * dot_width, tmpx, tmpy);
 						INFO("Vector " << j + 1);
 						REQUIRE(out[j] == Approx(reference));
 					}
