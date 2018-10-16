@@ -85,6 +85,9 @@ if(SDAccel_FOUND)
 	target_link_libraries(RunDot ${SDAccel_LIBRARIES} blas)
 	add_test(RunDot RunDot)
 
+	add_executable(PerfDot test/PerfDot.cpp)
+	target_link_libraries(PerfDot ${SDAccel_LIBRARIES})
+
 	add_custom_target(kernel_dot_multiple
 			COMMAND ${SDAccel_XOCC}
 			-t hw
