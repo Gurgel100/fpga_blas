@@ -26,7 +26,7 @@ struct Frequency {
 
 	template <class periodOther>
 	explicit Frequency(const Frequency<periodOther> &other) {
-		freq = other.getFreq<period>();
+		freq = other.template getFreq<period>();
 	}
 
 	template <class outPeriod = period>
@@ -43,7 +43,7 @@ private:
 const auto freq = Frequency<mega>(206.9);
 
 int main(int argc, const char *argv[]) {
-	const size_t size = static_cast<size_t>(argc > 1 ? strtod(argv[1], NULL)  : 5e8);
+	const size_t size = static_cast<size_t>(argc > 1 ? strtod(argv[1], NULL) : 5e8);
 	if (size % 16 != 0) {
 		cerr << "Size must be divisible by 16!" << endl;
 		return 1;
@@ -52,7 +52,7 @@ int main(int argc, const char *argv[]) {
 		cerr << "Size must be divisible by 1000!" << endl;
 		return 1;
 	}
-	const size_t chunkwidth = static_cast<size_t>(argc > 2 ? strtod(argv[2], NULL)  : 1) * 16;
+	const size_t chunkwidth = static_cast<size_t>(argc > 2 ? strtod(argv[2], NULL) : 1) * 16;
 	if (size % chunkwidth != 0) {
 		cerr << "Size must be divisible by chunkwidth!" << endl;
 		return 1;
