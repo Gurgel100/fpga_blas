@@ -56,13 +56,13 @@ function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC)
 			COMMAND ${SDAccel_VIVADO_HLS} -f Synthesis_${KERNEL_NAME}.tcl)
 endfunction(synthesis_target)
 
-function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS XOCC_FLAGS)
+function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
 	set(XOCC_FLAGS
 			--kernel ${KERNEL_ENTRY}
 			--platform ${BLAS_DSA_NAME}
 			--xp prop:kernel.${KERNEL_ENTRY}.kernel_flags="${KERNEL_FLAGS}"
-			${XOCC_FLAGS})
+			${ARGN})
 
 	synthesis_target(${KERNEL_NAME} ${KERNEL_ENTRY} ${KERNEL_SRC})
 
@@ -105,15 +105,15 @@ endfunction(kernel_target)
 
 # Test kernels
 kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp ""
-		"--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-		--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
-		--xp misc:map_connect=add.kernel.${BLAS_DOT_ENTRY_FUNCTION}_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI")
+		--xp misc:map_connect=add.kernel.blas_dot_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
+		--xp misc:map_connect=add.kernel.blas_dot_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
+		--xp misc:map_connect=add.kernel.blas_dot_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI)
 
 kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp ""
-		"--kernel_frequency 200
-		--xp misc:map_connect=add.kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-		--xp misc:map_connect=add.kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
-		--xp misc:map_connect=add.kernel.${BLAS_DOT_MULTIPLE_ENTRY_FUNCTION}_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI")
+		--kernel_frequency 200
+		--xp misc:map_connect=add.kernel.blas_dot_multiple_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
+		--xp misc:map_connect=add.kernel.blas_dot_multiple_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
+		--xp misc:map_connect=add.kernel.blas_dot_multiple_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI)
 
 
 if(SDAccel_FOUND)
