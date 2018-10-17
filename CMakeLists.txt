@@ -78,6 +78,11 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 					${KERNEL_SRC}
 					${XOCC_FLAGS})
 		else()
+			set(XOCC_FLAGS ${XOCC_FLAGS}
+					--profile_kernel "data:all:all:all"
+					--profile_kernel "stall:all:all"
+					--profile_kernel "exec:all:all")
+				
 			add_custom_target(compile_kernel_${KERNEL_NAME}
 					COMMAND ${SDAccel_XOCC}
 					-c
