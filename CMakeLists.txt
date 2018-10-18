@@ -71,6 +71,13 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 
 	if(SDAccel_FOUND)
 		if(((${SDAccel_MAJOR_VERSION} LESS 2018) AND (${SDAccel_MINOR_VERSION} LESS 3)) OR ${SDAccel_MAJOR_VERSION} LESS 2017)
+			set(CURRENT_GMEM 0)
+			foreach(axi IN ITEMS ${BANK_MAPPING})
+				set(XOCC_FLAGS ${XOCC_FLAGS}
+						--xp misc:map_connect=add.kernel.${KERNEL_ENTRY}_1.M_AXI_GMEM${CURRENT_GMEM}.core.OCL_REGION_0.M0${axi}_AXI)
+				MATH(EXPR CURRENT_GMEM ${CURRENT_GMEM}+1)
+			endforeach()
+
 			add_custom_target(kernel_${KERNEL_NAME}
 					COMMAND ${SDAccel_XOCC}
 					-t hw
@@ -81,11 +88,17 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 					${KERNEL_SRC}
 					${XOCC_FLAGS})
 		else()
+			set(CURRENT_GMEM 0)
+			foreach(axi IN ITEMS ${BANK_MAPPING})
+				set(XOCC_FLAGS ${XOCC_FLAGS}
+						--sp ${KERNEL_ENTRY}_1.m_axi_gmem${CURRENT_GMEM}:bank${axi})
+				MATH(EXPR CURRENT_GMEM ${CURRENT_GMEM}+1)
+			endforeach()
 			set(XOCC_FLAGS ${XOCC_FLAGS}
 					--profile_kernel "data:all:all:all"
 					--profile_kernel "stall:all:all"
 					--profile_kernel "exec:all:all")
-				
+
 			add_custom_target(compile_kernel_${KERNEL_NAME}
 					COMMAND ${SDAccel_XOCC}
 					-c
@@ -112,16 +125,10 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 endfunction(kernel_target)
 
 # Test kernels
-kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp ""
-		--xp misc:map_connect=add.kernel.blas_dot_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-		--xp misc:map_connect=add.kernel.blas_dot_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
-		--xp misc:map_connect=add.kernel.blas_dot_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI)
+kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0")
 
-kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp ""
-		--kernel_frequency 200
-		--xp misc:map_connect=add.kernel.blas_dot_multiple_1.M_AXI_GMEM0.core.OCL_REGION_0.M00_AXI
-		--xp misc:map_connect=add.kernel.blas_dot_multiple_1.M_AXI_GMEM1.core.OCL_REGION_0.M01_AXI
-		--xp misc:map_connect=add.kernel.blas_dot_multiple_1.M_AXI_GMEM2.core.OCL_REGION_0.M00_AXI)
+kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0"
+		--kernel_frequency 200)
 
 
 if(SDAccel_FOUND)
