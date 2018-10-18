@@ -181,10 +181,10 @@ namespace FBLAS {
 							const size_t num_subrows = (rc == num_rowchunks - 1) ? M - rc * size_rowchunk : size_rowchunk;
 							const size_t current_row = rc * size_rowchunk;
 
-							MemoryReaderMatrix_col:
-							for (size_t coli = 0; coli < Parent::num_columns_per_colchunk; ++coli) {
-								MemoryReaderMatrix_row:
-								for (size_t rowi = 0; rowi < num_subrows; ++rowi) {
+							MemoryReaderMatrix_row:
+							for (size_t rowi = 0; rowi < num_subrows; ++rowi) {
+								MemoryReaderMatrix_col:
+								for (size_t coli = 0; coli < Parent::num_columns_per_colchunk; ++coli) {
 									#pragma HLS LOOP_FLATTEN
 									#pragma HLS PIPELINE II=1
 
@@ -323,7 +323,7 @@ namespace FBLAS {
 						for (size_t coli = 0; coli < num_columns_per_colchunk; ++coli) {
 							#pragma HLS PIPELINE II=1
 							#pragma HLS LOOP_FLATTEN
-							T tmp_row[size_colchunk];
+							T tmp_row[size_column];
 
 							if (rowi == 0) {
 								xChunk[coli] = inX.Pop();
@@ -331,7 +331,7 @@ namespace FBLAS {
 
 							auto row = inA.Pop() * xChunk[coli];
 							row.Unpack(tmp_row);
-							colres[coli] = hlslib::TreeReduce<T, hlslib::op::Add<T>, size_colchunk>(tmp_row);
+							colres[coli] = hlslib::TreeReduce<T, hlslib::op::Add<T>, size_column>(tmp_row);
 
 							if (coli == num_columns_per_colchunk - 1) {
 								auto prev = cc == 0 ? 0 : chunkres[rowi];
@@ -353,7 +353,7 @@ namespace FBLAS {
 	public:
 		static_assert(size_column <= size_colchunk, "size_column must not be bigger than size_colchunk");
 
-		using Col_t = hlslib::DataPack<T, size_colchunk>;
+		using Col_t = hlslib::DataPack<T, size_column>;
 		using MemoryReaderVectorType = MemoryReaderVector<T, 1>;
 		using MemoryReaderMatrixType = MemoryReaderTransposedMatrix<Col_t, size_rowchunk, size_colchunk>;
 
@@ -390,7 +390,7 @@ namespace FBLAS {
 
 		MemoryWriter<Col_t> getWriter() {
 			#pragma HLS INLINE
-			return MemoryWriter<Col_t>(out, N / size_colchunk);
+			return MemoryWriter<Col_t>(out, N / size_column);
 		}
 
 	private:
