@@ -143,6 +143,13 @@ if(SDAccel_FOUND)
 	add_executable(PerfDot test/PerfDot.cpp)
 	target_link_libraries(PerfDot ${SDAccel_LIBRARIES})
 
+	add_executable(RunGemv test/RunGemv.cpp)
+	target_link_libraries(RunGemv ${SDAccel_LIBRARIES} blas)
+	add_test(RunGemv RunGemv)
+
+	add_executable(PerfGemv test/PerfGemv.cpp)
+	target_link_libraries(PerfGemv ${SDAccel_LIBRARIES})
+
 	# Target for building all kernels
 	add_custom_target(kernel_all)
 	add_dependencies(kernel_all kernel_dot kernel_dot_multiple)
