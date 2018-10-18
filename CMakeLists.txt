@@ -60,7 +60,7 @@ function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC)
 			DEPENDS delete_hls_project_dir)
 endfunction(synthesis_target)
 
-function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
+function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAPPING)
 	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
 	set(XOCC_FLAGS
 			--kernel ${KERNEL_ENTRY}
