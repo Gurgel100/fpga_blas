@@ -47,13 +47,16 @@ else()
   set(BLAS_TARGET_TIMING "300MHz")
 endif()
 
+add_custom_target(delete_hls_project_dir rm -r ${CMAKE_BINARY_DIR}/${BLAS_PROJECT_NAME})
+
 # Synthesis target
 function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC)
 	set(BLAS_ENTRY_FUNCTION ${KERNEL_ENTRY})
 	set(BLAS_SRC_SYNTHESIS ${KERNEL_SRC})
 	configure_file(scripts/Synthesis.tcl.in Synthesis_${KERNEL_NAME}.tcl)
 	add_custom_target(synthesize_${KERNEL_NAME}
-			COMMAND ${SDAccel_VIVADO_HLS} -f Synthesis_${KERNEL_NAME}.tcl)
+			COMMAND ${SDAccel_VIVADO_HLS} -f Synthesis_${KERNEL_NAME}.tcl
+			DEPENDS delete_hls_project_dir)
 endfunction(synthesis_target)
 
 function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
