@@ -8,6 +8,7 @@
 #include <hlslib/Stream.h>
 #include <hlslib/DataPack.h>
 #include <hlslib/TreeReduce.h>
+#include <array>
 
 namespace FBLAS {
 	namespace Core {
@@ -50,16 +51,24 @@ namespace FBLAS {
 			}
 		}
 
-		template <class T, size_t num_partial_sums, class U = T>
+		template <class T, size_t num_partial_sums, class U = T, size_t num_parallel_sums = 1>
 		static void accumulate(Stream<T> &in, Stream<T> &out, U init = 0) {
 			#pragma HLS INLINE
-			T result = init;
+			std::array<T, num_parallel_sums> result;
+
 			accumulate_loop:
 			for (size_t i = 0; i < num_partial_sums; ++i) {
-				#pragma HLS PIPELINE II=1
-				result += in.Pop();
+				for (size_t j = 0; j < num_parallel_sums; ++j) {
+					#pragma HLS PIPELINE II=1
+					#pragma HLS LOOP_FLATTEN
+					T prev = i == 0 ? T(init) : result[j];
+					result[j] = prev + in.Pop();
+
+					if(i == num_partial_sums - 1) {
+						out.Push(result[j]);
+					}
+				}
 			}
-			out.Push(result);
 		}
 
 		template <class T, int width, class Operator>

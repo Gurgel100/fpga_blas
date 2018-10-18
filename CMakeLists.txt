@@ -28,8 +28,9 @@ configure_file(include/Config.h.in Config.h)
 enable_testing()
 
 set(BLAS_KERNEL_SRC
-    # Put HLS source files here
-    ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp)
+	    # Put HLS source files here
+	    ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp
+		${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp)
 add_library(fpgablas ${BLAS_KERNEL_SRC})
 target_link_libraries(fpgablas ${CMAKE_THREAD_LIBS_INIT})
 
@@ -130,6 +131,9 @@ kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0"
 kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0"
 		--kernel_frequency 200)
 
+kernel_target("gemv" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
+
+kernel_target("gemv_transposed" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
 
 if(SDAccel_FOUND)
 	add_executable(RunDot test/RunDot.cpp)
