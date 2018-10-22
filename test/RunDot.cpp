@@ -48,14 +48,14 @@ static void test_dot(ocl::Context &context, const std::string &kernelFile, const
 	auto program = context.MakeProgram(kernelFile + ".xclbin");
 
 	for (auto &size : sizes) {
-		SECTION("Vector of size " + std::to_string(size)) {
-			auto kernel = program.MakeKernel("blas_dot", size * dot_width, inputDeviceX, inputDeviceY, outputDevice);
-			kernel.ExecuteTask();
+		auto kernel = program.MakeKernel("blas_dot", size * dot_width, inputDeviceX, inputDeviceY, outputDevice);
+		kernel.ExecuteTask();
 
-			outputDevice.CopyToHost(outputHost.data());
-			auto reference = reference_dot(inputHostX, inputHostY, size * dot_width);
-			REQUIRE(outputHost[0] == Approx(reference));
-		}
+		outputDevice.CopyToHost(outputHost.data());
+		auto reference = reference_dot(inputHostX, inputHostY, size * dot_width);
+
+		INFO("Vector of size " + std::to_string(size));
+		REQUIRE(outputHost[0] == Approx(reference));
 	}
 }
 
