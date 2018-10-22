@@ -25,7 +25,7 @@ struct Frequency {
 
 	template <class periodOther>
 	explicit Frequency(const Frequency<periodOther> &other) {
-		freq = other.getFreq<period>();
+		freq = other.template getFreq<period>();
 	}
 
 	template <class outPeriod = period>
