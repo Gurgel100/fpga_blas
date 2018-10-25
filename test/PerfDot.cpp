@@ -65,9 +65,19 @@ int main(int argc, const char *argv[]) {
 
 	auto kernel = program.MakeKernel("blas_dot", size, inputDeviceX, inputDeviceY, outputDevice);
 	cout << "Executing kernel..." << endl;
-	auto time = kernel.ExecuteTask();
+	double time = 0.0;
+	double mintime = INFINITY;
+	double maxtime = -INFINITY;
+	for (int i = 0; i < 10; ++i) {
+		auto t = kernel.ExecuteTask();
+		time += t.first;
+		mintime = min(mintime, t.first);
+		maxtime = max(maxtime, t.first);
+	}
+	time /= 10;
 
-	cout << "Kernel of size " << size << " executed in " << scientific << time.first << " seconds" << endl;
+	cout << "Kernel of size " << size << " executed in " << scientific << time << " seconds(" << mintime << "," << maxtime << ")" << endl;
+	cout << "Memory bandwidth: " << size * sizeof(Type_t) / time << " B/s" << endl;
 
 	return 0;
 }
