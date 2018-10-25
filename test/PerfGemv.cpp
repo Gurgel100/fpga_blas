@@ -65,13 +65,20 @@ int main(int argc, const char *argv[]) {
 
 	cout << "Actual frequency: " << freq.getFreq<mega>() << " MHz" << endl;
 
-	this_thread::sleep_for(chrono::seconds(1));
-
 	auto kernel = program.MakeKernel("blas_gemv", inputDeviceA, inputDeviceX, outputDevice, N, M);
 	cout << "Executing kernel..." << endl;
-	auto time = kernel.ExecuteTask();
+	double time = 0.0;
+	double mintime = INFINITY;
+	double maxtime = -INFINITY;
+	for (int i = 0; i < 10; ++i) {
+		auto t = kernel.ExecuteTask();
+		time += t.first;
+		mintime = min(mintime, t.first);
+		maxtime = max(maxtime, t.first);
+	}
+	time /= 10;
 
-	cout << "Kernel executed in " << scientific << time.first << " seconds" << endl;
+	cout << "Kernel executed in " << scientific << time << " seconds(" << mintime << "," << maxtime << ")" << endl;
 
 	return 0;
 }
