@@ -13,8 +13,10 @@
 using namespace hlslib;
 using namespace std;
 
+static ocl::Context context;
+
 template <typename T>
-static void run_gemv(ocl::Context &context, ocl::Program &program, const vector<T> &A, const vector<T> &x, vector<T> &y, const size_t N, const size_t M) {
+static void run_gemv(ocl::Program &program, const vector<T> &A, const vector<T> &x, vector<T> &y, const size_t N, const size_t M) {
 	auto inputDeviceA = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, A.cbegin(), A.cend());
 	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, x.cbegin(), x.cend());
 	auto outputDevice = context.MakeBuffer<T, ocl::Access::write>(ocl::MemoryBank::bank2, y.begin(), y.end());
@@ -26,8 +28,7 @@ static void run_gemv(ocl::Context &context, ocl::Program &program, const vector<
 }
 
 TEST_CASE("kernel_gemv", "[GEMV]") {
-	ocl::Context context;
-	auto program = context.MakeProgram("kernel_gemv.xclbin");
+	static auto program = context.MakeProgram("kernel_gemv.xclbin");
 
 	for (size_t N = 16; N <= 32; N += 16) {
 		for (size_t M = 16; M <= 32; M += 16) {
@@ -38,7 +39,7 @@ TEST_CASE("kernel_gemv", "[GEMV]") {
 					fill(A.begin(), A.end(), 1);
 					fill(x.begin(), x.end(), 1);
 
-					run_gemv(context, program, A, x, y, N, M);
+					run_gemv(program, A, x, y, N, M);
 
 					cblas_sgemv(CblasRowMajor, CblasNoTrans, M, N, 1, A.data(), N, x.data(), 1, 0, ref_y.data(), 1);
 
@@ -52,7 +53,7 @@ TEST_CASE("kernel_gemv", "[GEMV]") {
 					iota(A.begin(), A.end(), 0);
 					iota(x.begin(), x.end(), 0);
 
-					run_gemv(context, program, A, x, y, N, M);
+					run_gemv(program, A, x, y, N, M);
 
 					cblas_sgemv(CblasRowMajor, CblasNoTrans, M, N, 1, A.data(), N, x.data(), 1, 0, ref_y.data(), 1);
 
@@ -68,7 +69,7 @@ TEST_CASE("kernel_gemv", "[GEMV]") {
 					generate(A.begin(), A.end(), [&g, &dist](){return dist(g);});
 					generate(x.begin(), x.end(), [&g, &dist](){return dist(g);});
 
-					run_gemv(context, program, A, x, y, N, M);
+					run_gemv(program, A, x, y, N, M);
 
 					cblas_sgemv(CblasRowMajor, CblasNoTrans, M, N, 1, A.data(), N, x.data(), 1, 0, ref_y.data(), 1);
 
@@ -83,7 +84,7 @@ TEST_CASE("kernel_gemv", "[GEMV]") {
 }
 
 template <typename T>
-static void run_gemv_transposed(ocl::Context &context, ocl::Program &program, const vector<T> &A, const vector<T> &x, vector<T> &y, const size_t N, const size_t M) {
+static void run_gemv_transposed(ocl::Program &program, const vector<T> &A, const vector<T> &x, vector<T> &y, const size_t N, const size_t M) {
 	auto inputDeviceA = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank0, A.cbegin(), A.cend());
 	auto inputDeviceX = context.MakeBuffer<T, ocl::Access::read>(ocl::MemoryBank::bank1, x.cbegin(), x.cend());
 	auto outputDevice = context.MakeBuffer<T, ocl::Access::readWrite>(ocl::MemoryBank::bank2, y.begin(), y.end());
@@ -95,8 +96,7 @@ static void run_gemv_transposed(ocl::Context &context, ocl::Program &program, co
 }
 
 TEST_CASE("kernel_gemv_transposed", "[GEMV]") {
-	ocl::Context context;
-	auto program = context.MakeProgram("kernel_gemv_transposed.xclbin");
+	static auto program = context.MakeProgram("kernel_gemv_transposed.xclbin");
 
 	for (size_t N = 16; N <= 32; N += 16) {
 		for (size_t M = 16; M <= 32; M += 16) {
@@ -107,7 +107,7 @@ TEST_CASE("kernel_gemv_transposed", "[GEMV]") {
 					fill(A.begin(), A.end(), 1);
 					fill(x.begin(), x.end(), 1);
 
-					run_gemv_transposed(context, program, A, x, y, N, M);
+					run_gemv_transposed(program, A, x, y, N, M);
 
 					cblas_sgemv(CblasRowMajor, CblasTrans, M, N, 1, A.data(), N, x.data(), 1, 0, ref_y.data(), 1);
 
@@ -121,7 +121,7 @@ TEST_CASE("kernel_gemv_transposed", "[GEMV]") {
 					iota(A.begin(), A.end(), 0);
 					iota(x.begin(), x.end(), 0);
 
-					run_gemv_transposed(context, program, A, x, y, N, M);
+					run_gemv_transposed(program, A, x, y, N, M);
 
 					cblas_sgemv(CblasRowMajor, CblasTrans, M, N, 1, A.data(), N, x.data(), 1, 0, ref_y.data(), 1);
 
@@ -137,7 +137,7 @@ TEST_CASE("kernel_gemv_transposed", "[GEMV]") {
 					generate(A.begin(), A.end(), [&g, &dist](){return dist(g);});
 					generate(x.begin(), x.end(), [&g, &dist](){return dist(g);});
 
-					run_gemv_transposed(context, program, A, x, y, N, M);
+					run_gemv_transposed(program, A, x, y, N, M);
 
 					cblas_sgemv(CblasRowMajor, CblasTrans, M, N, 1, A.data(), N, x.data(), 1, 0, ref_y.data(), 1);
 
