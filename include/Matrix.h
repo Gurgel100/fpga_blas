@@ -14,6 +14,7 @@
 #include <assert.h>
 #include "Memory.h"
 #include "Core.h"
+#include "VectorElementOperation.h"
 
 // Note: clang <3.3 doesn't support constructor inheritance
 
@@ -448,6 +449,16 @@ namespace FBLAS {
 			for (size_t colchunk = 0; colchunk < num_colchunks; ++colchunk) {
 				Core::accumulate<Col_t, size_rowchunk, T, num_columns_per_colchunk>(in, out);
 			}
+		}
+	};
+
+	template <class T, class Op>
+	class MatrixElementOperation : VectorElementOperation<T, Op> {
+	public:
+
+		MatrixElementOperation(const size_t N, const size_t M, Stream<T> &inA, Stream<T> &inB, Stream<T> &out)
+				: VectorElementOperation<T, Op>(N * M, inA, inB, out) {
+			#pragma HLS INLINE
 		}
 	};
 }
