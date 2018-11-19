@@ -137,8 +137,16 @@ kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProd
 		--kernel_frequency 200)
 
 kernel_target("gemv" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
+kernel_target("gemv_32_16_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2")
+kernel_target("gemv_16_32_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
+kernel_target("gemv_32_32_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
+kernel_target("gemv_16_64_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64 -DGEMV_SIZE_COLUMN=16" "0;1;2")
 
 kernel_target("gemv_transposed" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
+kernel_target("gemv_transposed_32_16_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2")
+kernel_target("gemv_transposed_16_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
+kernel_target("gemv_transposed_32_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
+kernel_target("gemv_transposed_16_64_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64" "0;1;2")
 
 if(SDAccel_FOUND)
 	add_executable(RunDot test/RunDot.cpp)
