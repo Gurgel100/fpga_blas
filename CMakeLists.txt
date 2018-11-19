@@ -51,9 +51,10 @@ endif()
 add_custom_target(delete_hls_project_dir rm -r ${CMAKE_BINARY_DIR}/${BLAS_PROJECT_NAME})
 
 # Synthesis target
-function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC)
+function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 	set(BLAS_ENTRY_FUNCTION ${KERNEL_ENTRY})
 	set(BLAS_SRC_SYNTHESIS ${KERNEL_SRC})
+	set(KERNEL_CXX_FLAGS "${KERNEL_CXX_FLAGS} ${KERNEL_FLAGS}")
 	configure_file(scripts/Synthesis.tcl.in Synthesis_${KERNEL_NAME}.tcl)
 	add_custom_target(synthesize_${KERNEL_NAME}
 			COMMAND ${SDAccel_VIVADO_HLS} -f Synthesis_${KERNEL_NAME}.tcl
@@ -61,6 +62,11 @@ function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC)
 endfunction(synthesis_target)
 
 function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAPPING)
+	if (NOT KERNEL_FLAGS)
+		set(KERNEL_FLAGS " ")
+	endif ()
+	synthesis_target(${KERNEL_NAME} ${KERNEL_ENTRY} ${KERNEL_SRC} ${KERNEL_FLAGS})
+
 	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
 	set(XOCC_FLAGS
 			-O3
@@ -68,8 +74,6 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 			--platform ${BLAS_DSA_NAME}
 			--xp prop:kernel.${KERNEL_ENTRY}.kernel_flags="${KERNEL_FLAGS}"
 			${ARGN})
-
-	synthesis_target(${KERNEL_NAME} ${KERNEL_ENTRY} ${KERNEL_SRC})
 
 	if(SDAccel_FOUND)
 		if(((${SDAccel_MAJOR_VERSION} LESS 2018) AND (${SDAccel_MINOR_VERSION} LESS 3)) OR ${SDAccel_MAJOR_VERSION} LESS 2017)
