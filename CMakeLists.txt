@@ -132,6 +132,7 @@ endfunction(kernel_target)
 
 # Test kernels
 kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0")
+kernel_target("dot_32" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_WIDTH=32" "0;1;0")
 
 kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0"
 		--kernel_frequency 200)

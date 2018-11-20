@@ -8,8 +8,8 @@
 
 using hlslib::Stream;
 
-using DotProduct = FBLAS::DotProduct<Data_t, dot_width>;
-using DotProductInterleaved = FBLAS::DotProductInterleaved<Data_t, dot_width>;
+using DotProduct = FBLAS::DotProduct<Data_t, DOT_WIDTH>;
+using DotProductInterleaved = FBLAS::DotProductInterleaved<Data_t, DOT_WIDTH>;
 
 void blas_dot(const size_t N, DotProduct::Chunk const memoryIn_X[], DotProduct::Chunk const memoryIn_Y[], Data_t memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
