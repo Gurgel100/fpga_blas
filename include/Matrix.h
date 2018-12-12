@@ -320,6 +320,8 @@ namespace FBLAS {
 					for (size_t rowi = 0; rowi < num_subrows; ++rowi) {
 						#pragma HLS LOOP_TRIPCOUNT min=1 max=size_colchunk
 						T colres[num_columns_per_colchunk];
+						auto prevChunkRes = cc == 0 ? 0 : chunkres[rowi];
+
 						col:
 						for (size_t coli = 0; coli < num_columns_per_colchunk; ++coli) {
 							#pragma HLS PIPELINE II=1
@@ -333,15 +335,12 @@ namespace FBLAS {
 							auto row = inA.Pop() * xChunk[coli];
 							row.Unpack(tmp_row);
 							colres[coli] = hlslib::TreeReduce<T, hlslib::op::Add<T>, size_column>(tmp_row);
+						}
 
-							if (coli == num_columns_per_colchunk - 1) {
-								auto prev = cc == 0 ? 0 : chunkres[rowi];
-								chunkres[rowi] = prev + hlslib::TreeReduce<T, hlslib::op::Add<T>, num_columns_per_colchunk>(colres);
+						chunkres[rowi] = prevChunkRes + hlslib::TreeReduce<T, hlslib::op::Add<T>, num_columns_per_colchunk>(colres);
 
-								if (cc == num_colchunks - 1) {
-									outY.Push(chunkres[rowi]);
-								}
-							}
+						if (cc == num_colchunks - 1) {
+							outY.Push(chunkres[rowi]);
 						}
 					}
 				}
