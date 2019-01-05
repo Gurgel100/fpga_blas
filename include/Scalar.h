@@ -7,33 +7,40 @@
 
 #include <hlslib/Stream.h>
 #include <hlslib/Simulation.h>
+#include <hlslib/DataPack.h>
 #include "Memory.h"
 
 namespace FBLAS {
 
 	using hlslib::Stream;
 
-	template<class T>
+	template<class T, size_t width = 16>
 	class Scalar {
 	public:
-		Scalar(const size_t N, Stream<T> &inX, Stream<T> &out) : N(N), inX(inX), out(out) {
+		using Data_t = typename std::conditional<width == 1, T, hlslib::DataPack<T, width>>::type;
+
+		Scalar(const size_t N, Stream<Data_t> &inX, Stream<Data_t> &out) : N(N), inX(inX), out(out) {
 			#pragma HLS INLINE
 		}
 
-		Memory::MemoryReader<T> getReaderX() {
+		Memory::MemoryReader<Data_t> getReaderX() {
 			#pragma HLS INLINE
-			return Memory::MemoryReader<T>(inX, N);
+			return Memory::MemoryReader<Data_t>(inX, N / width);
 		}
 
-		Memory::MemoryWriter<T> getWriterX() {
+		Memory::MemoryWriter<Data_t> getWriterX() {
 			#pragma HLS INLINE
-			return Memory::MemoryWriter<T>(out, N);
+			return Memory::MemoryWriter<Data_t>(out, N / width);
 		}
 
 		template <bool dataflow = false>
 		void calc(Stream<T> &factor) {
 			#pragma HLS INLINE
-			calc<dataflow>(N, factor.Pop(), out);
+			if (dataflow) {
+				HLSLIB_DATAFLOW_FUNCTION(calc, N, factor, inX, out);
+			} else {
+				calc(N, factor, inX, out);
+			}
 		}
 
 		template <bool dataflow = false>
@@ -48,14 +55,27 @@ namespace FBLAS {
 
 	private:
 		size_t N;
-		Stream<T> &inX, &out;
+		Stream<Data_t> &inX, &out;
 
-		static void calc(const size_t N, const T factor, Stream<T> &inX, Stream<T> &out) {
+		static void calc(const size_t N, const T factor, Stream<Data_t> &inX, Stream<Data_t> &out) {
 			#pragma HLS INLINE
 			Scalar_calc_loop:
 			for (size_t i = 0; i < N; ++i) {
 				#pragma HLS PIPELINE II=1
 				out.Push(inX.Pop() * factor);
+			}
+		}
+
+		static void calc(const size_t N, Stream<T> &factor, Stream<Data_t> &inX, Stream<Data_t> &out) {
+			#pragma HLS INLINE
+			Scalar_calc_loop:
+			T factor_val;
+			for (size_t i = 0; i < N; ++i) {
+				#pragma HLS PIPELINE II=1
+				if (i == 0) {
+					factor_val = factor.Pop();
+				}
+				out.Push(inX.Pop() * factor_val);
 			}
 		}
 	};
