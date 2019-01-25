@@ -14,7 +14,7 @@ namespace FBLAS {
 
 	using hlslib::Stream;
 
-	template<class T, size_t width = 16>
+	template<class T, size_t width = 1>
 	class Scalar {
 	public:
 		using Data_t = typename std::conditional<width == 1, T, hlslib::DataPack<T, width>>::type;
@@ -37,9 +37,9 @@ namespace FBLAS {
 		void calc(Stream<T> &factor) {
 			#pragma HLS INLINE
 			if (dataflow) {
-				HLSLIB_DATAFLOW_FUNCTION(calc, N, factor, inX, out);
+				HLSLIB_DATAFLOW_FUNCTION(calcStream, N, factor, inX, out);
 			} else {
-				calc(N, factor, inX, out);
+				calcStream(N, factor, inX, out);
 			}
 		}
 
@@ -60,17 +60,17 @@ namespace FBLAS {
 		static void calc(const size_t N, const T factor, Stream<Data_t> &inX, Stream<Data_t> &out) {
 			#pragma HLS INLINE
 			Scalar_calc_loop:
-			for (size_t i = 0; i < N; ++i) {
+			for (size_t i = 0; i < N / width; ++i) {
 				#pragma HLS PIPELINE II=1
 				out.Push(inX.Pop() * factor);
 			}
 		}
 
-		static void calc(const size_t N, Stream<T> &factor, Stream<Data_t> &inX, Stream<Data_t> &out) {
+		static void calcStream(const size_t N, Stream<T> &factor, Stream<Data_t> &inX, Stream<Data_t> &out) {
 			#pragma HLS INLINE
 			Scalar_calc_loop:
 			T factor_val;
-			for (size_t i = 0; i < N; ++i) {
+			for (size_t i = 0; i < N / width; ++i) {
 				#pragma HLS PIPELINE II=1
 				if (i == 0) {
 					factor_val = factor.Pop();
