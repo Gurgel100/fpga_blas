@@ -44,8 +44,7 @@ namespace FBLAS {
 					macc_step<T, num_partial_sums, U>(in_X, in_Y, part_sums, i, round, round * num_partial_sums + i, N);
 
 					if (round == rounds) {
-						const T sum = (i < N) ? part_sums[i] : zero;
-						out.Push(sum);
+						out.Push(part_sums[i]);
 					}
 				}
 			}
