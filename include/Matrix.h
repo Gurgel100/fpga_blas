@@ -262,6 +262,9 @@ namespace FBLAS {
 		using MemoryReaderVectorType = MemoryReaderVector<Col_t, size_colchunk>;
 		using MemoryReaderMatrixType = MemoryReaderMatrix<Col_t, size_rowchunk, size_colchunk>;
 
+		static constexpr size_t column_size = size_column;
+		static constexpr size_t colchunk_size = size_colchunk;
+		static constexpr size_t rowchunk_size = size_rowchunk;
 		static constexpr size_t num_columns_per_colchunk = size_colchunk / size_column;
 
 		MatrixVectorMultiplication(const size_t N, const size_t M, Stream<Col_t> &inA, Stream<Col_t> &inX, Stream<T> &out)
