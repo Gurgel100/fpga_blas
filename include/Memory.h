@@ -96,6 +96,58 @@ namespace FBLAS {
 				}
 			}
 		};
+
+		namespace {
+			template <class T>
+			struct DuplicateAll {
+				template <class I>
+				inline bool operator()(const I &index, const T &value) {
+					return true;
+				}
+			};
+		}
+
+		/**
+		 * @brief Duplicates a stream if the condition of @p Functor is fullfilled
+		 *
+		 * @tparam T The type of the elements in the stream
+		 * @tparam Functor Returns true if it should be duplicated else it only copies values from in to outA
+		 */
+		template <class T, class Functor = DuplicateAll<T>>
+		class StreamDuplicator {
+		public:
+			StreamDuplicator(const size_t N) : N(N) {
+				#pragma HLS INLINE
+			}
+
+			template <bool dataflow = false>
+			void duplicate(Stream<T> &in, Stream<T> &outA, Stream<T> &outB) {
+				#pragma HLS INLINE
+				if (dataflow) {
+					HLSLIB_DATAFLOW_FUNCTION(duplicate, N, in, outA, outB);
+				} else {
+					duplicate(N, in, outA, outB);
+				}
+			}
+
+		protected:
+			const size_t N;
+
+		private:
+			static void duplicate(const size_t N, Stream<T> &in, Stream<T> &outA, Stream<T> &outB) {
+				#pragma HLS INLINE
+				Functor check;
+				StreamDuplicator_duplicate_loop:
+				for (size_t i = 0; i < N; ++i) {
+					#pragma HLS PIPELINE II=1
+					auto val = in.Pop();
+					outA.Push(val);
+					if (check(i, val)) {
+						outB.Push(val);
+					}
+				}
+			}
+		};
 	}
 }
 
