@@ -30,7 +30,9 @@ enable_testing()
 set(BLAS_KERNEL_SRC
 	    # Put HLS source files here
 	    ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp
-		${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp)
+		${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp
+		${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp
+		${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp)
 add_library(fpgablas ${BLAS_KERNEL_SRC})
 target_link_libraries(fpgablas ${CMAKE_THREAD_LIBS_INIT})
 
@@ -130,6 +132,101 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 	endif()
 endfunction(kernel_target)
 
+# functions for multiple kernels in one kernel file
+function(multiple_kernel_compile_target KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
+	if (NOT KERNEL_FLAGS)
+		set(KERNEL_FLAGS " ")
+	endif ()
+	synthesis_target(${KERNEL_ENTRY} ${KERNEL_ENTRY} ${KERNEL_SRC} ${KERNEL_FLAGS})
+
+	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
+	set(XOCC_FLAGS
+			#-O3
+			--kernel ${KERNEL_ENTRY}
+			--platform ${BLAS_DSA_NAME}
+			--xp prop:kernel.${KERNEL_ENTRY}.kernel_flags="${KERNEL_FLAGS}"
+			${ARGN})
+
+	if(SDAccel_FOUND)
+		if(BLAS_DSA_NAME MATCHES "dynamic")
+			set(XOCC_FLAGS ${XOCC_FLAGS}
+					--profile_kernel "data:all:all:all"
+					--profile_kernel "stall:all:all"
+					--profile_kernel "exec:all:all")
+		endif()
+		add_custom_target(compile_multiple_kernel_${KERNEL_ENTRY}
+				COMMAND ${SDAccel_XOCC}
+				-c
+				-t hw
+				-o kernel_${KERNEL_ENTRY}.xo
+				-I${CMAKE_SOURCE_DIR}/include
+				-I${CMAKE_SOURCE_DIR}/include/fblaslib
+				-I${CMAKE_SOURCE_DIR}/hlslib/include
+				-I${CMAKE_BINARY_DIR}
+				${KERNEL_SRC}
+				${XOCC_FLAGS})
+	endif()
+endfunction(multiple_kernel_compile_target)
+
+function(multiple_kernel_link_target KERNEL_NAME XOCC_FLAGS)
+	set(XOCC_FLAGS ${XOCC_FLAGS}
+			#-O3
+			--platform ${BLAS_DSA_NAME})
+
+	math(EXPR NUM_KERNELS "(${ARGC} - 2) % 2")
+	if(NOT (${NUM_KERNELS} EQUAL 0))
+		message(FATAL_ERROR "The number of parameters for multiple_kernel_link_target has to be given in pairs of 2")
+	endif ()
+
+	if(SDAccel_FOUND)
+		set(DEPENDENCIES "")
+		set(ARG_NUM 2)  # current argument index
+		while(ARG_NUM LESS ARGC)
+			set(KERNEL_FILE ${ARGV${ARG_NUM}})
+			set(XOCC_FLAGS ${XOCC_FLAGS}
+					kernel_${KERNEL_FILE}.xo)
+			list(APPEND DEPENDENCIES compile_multiple_kernel_${KERNEL_FILE})
+			math(EXPR ARG_NUM "${ARG_NUM}+1")
+
+			set(BANK_MAPPING ${ARGV${ARG_NUM}})
+			math(EXPR ARG_NUM "${ARG_NUM}+1")
+
+			if(NOT (BLAS_DSA_NAME MATCHES "dynamic"))
+				set(CURRENT_GMEM 0)
+				foreach(axi IN ITEMS ${BANK_MAPPING})
+					set(XOCC_FLAGS ${XOCC_FLAGS}
+							--xp misc:map_connect=add.kernel.${KERNEL_FILE}_1.M_AXI_GMEM${CURRENT_GMEM}.core.OCL_REGION_0.M0${axi}_AXI)
+					MATH(EXPR CURRENT_GMEM ${CURRENT_GMEM}+1)
+				endforeach()
+			else()
+				set(CURRENT_GMEM 0)
+				foreach(axi IN ITEMS ${BANK_MAPPING})
+					set(XOCC_FLAGS ${XOCC_FLAGS}
+							--sp ${KERNEL_FILE}_1.m_axi_gmem${CURRENT_GMEM}:bank${axi})
+					MATH(EXPR CURRENT_GMEM ${CURRENT_GMEM}+1)
+				endforeach()
+
+				set(XOCC_FLAGS ${XOCC_FLAGS}
+						--profile_kernel "data:all:all:all"
+						--profile_kernel "stall:all:all"
+						--profile_kernel "exec:all:all")
+			endif()
+		endwhile()
+
+		add_custom_target(kernel_${KERNEL_NAME}
+			COMMAND ${SDAccel_XOCC}
+			-l
+			-t hw
+			-o kernel_${KERNEL_NAME}.xclbin
+			-I${CMAKE_SOURCE_DIR}/include
+			-I${CMAKE_SOURCE_DIR}/hlslib/include
+			-I${CMAKE_BINARY_DIR}
+			${XOCC_FLAGS})
+
+		add_dependencies(kernel_${KERNEL_NAME} ${DEPENDENCIES})
+	endif()
+endfunction(multiple_kernel_link_target)
+
 # Test kernels
 kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0")
 kernel_target("dot_32" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_WIDTH=32" "0;1;0")
@@ -149,6 +246,20 @@ kernel_target("gemv_transposed_16_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_D
 kernel_target("gemv_transposed_32_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
 kernel_target("gemv_transposed_16_64_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64" "0;1;2")
 
+multiple_kernel_compile_target("sscal" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("saxpy" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("sdot" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("snrm2" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("sgemv" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "")
+multiple_kernel_link_target("fblas_single" "" "sdot" "0;1;2" "snrm2" "0;1" "sgemv" "0;1;2;3")
+
+multiple_kernel_compile_target("dscal" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("daxpy" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("ddot" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("dnrm2" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "")
+multiple_kernel_compile_target("dgemv" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "")
+multiple_kernel_link_target("fblas_double" "" "ddot" "0;1;2" "dnrm2" "0;1" "dgemv" "0;1;2;3")
+
 if(SDAccel_FOUND)
 	add_executable(RunDot test/RunDot.cpp)
 	target_link_libraries(RunDot ${SDAccel_LIBRARIES} blas)
@@ -163,6 +274,9 @@ if(SDAccel_FOUND)
 
 	add_executable(PerfGemv test/PerfGemv.cpp)
 	target_link_libraries(PerfGemv ${SDAccel_LIBRARIES})
+
+	add_library(fblas ${CMAKE_SOURCE_DIR}/host/fblas.cpp)
+	target_link_libraries(fblas ${SDAccel_LIBRARIES})
 
 	# Target for building all kernels
 	add_custom_target(kernel_all)
