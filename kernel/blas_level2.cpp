@@ -129,3 +129,114 @@ extern "C" void dgemv(
 	_gemv(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
 	      b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
+
+
+
+/*
+ * GEMV
+ */
+
+template <class T>
+static void _gemv_transposed(
+		size_t M,
+		size_t N,
+		T a,
+		const Type<T> memoryIn_A[],
+		const T memoryIn_X[],
+		size_t incX,
+		T b,
+		const Type<T> memoryIn_Y[],
+		size_t incY,
+		Type<T> memoryOut[],
+		size_t incOut) {
+	#pragma HLS INLINE
+
+	Stream<Type<T>> inA("gemv_transposed_inA"), Ax("gemv_transposed_Ax"), scaledAx("gemv_transposed_scaledAx"),
+			inY("gemv_transposed_inY"), scaledY("gemv_transposed_scaledY"), out("gemv_transposed_out");
+	Stream<T> inX("gemv_transposed_inX");
+	Scalar<Type<T>> scalarAx(M, Ax, scaledAx), scalarY(M, inY, scaledY);
+	VectorElementOperation<Type<T>, hlslib::op::Add<Type<T>>> vectorAddition(M, scaledAx, scaledY, out);
+	MatrixVectorMultiplicationTransposed<T, GEMV_SIZE_ROWCHUNK, GEMV_SIZE_COLCHUNK, WIDTH> matrixVectorMultiplicationAx(N, M, inA, inX, Ax);
+
+	HLSLIB_DATAFLOW_INIT();
+	matrixVectorMultiplicationAx.getReaderA().template readFromMemory<true>(memoryIn_A);
+	matrixVectorMultiplicationAx.getReaderX().template readFromMemory<true>(memoryIn_X, incX);
+	matrixVectorMultiplicationAx.template calc<true>();
+	scalarAx.template calc<true>(a);
+
+	scalarY.getReaderX().template readFromMemory<true>(memoryIn_Y, incY);
+	scalarY.template calc<true>(b);
+
+	vectorAddition.template calc<true>();
+	vectorAddition.getWriter().template writeToMemory<true>(memoryOut, incOut);
+
+	HLSLIB_DATAFLOW_FINALIZE();
+}
+
+extern "C" void sgemv_transposed(
+		const int M,
+		const int N,
+		const float a,
+		const Type<float> memoryIn_A[],
+		const float memoryIn_X[],
+		int incX,
+		const float b,
+		const Type<float> memoryIn_Y[],
+		int incY,
+		Type<float> memoryOut[],
+		int incOut) {
+	#pragma HLS INTERFACE m_axi port=memoryIn_A offset=slave bundle=gmem0
+	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem1
+	#pragma HLS INTERFACE m_axi port=memoryIn_Y offset=slave bundle=gmem2
+	#pragma HLS INTERFACE m_axi port=memoryOut offset=slave bundle=gmem3
+	#pragma HLS INTERFACE s_axilite port=memoryIn_A bundle=control
+	#pragma HLS INTERFACE s_axilite port=memoryIn_X bundle=control
+	#pragma HLS INTERFACE s_axilite port=memoryIn_Y bundle=control
+	#pragma HLS INTERFACE s_axilite port=memoryOut bundle=control
+	#pragma HLS INTERFACE s_axilite port=M bundle=control
+	#pragma HLS INTERFACE s_axilite port=N bundle=control
+	#pragma HLS INTERFACE s_axilite port=a bundle=control
+	#pragma HLS INTERFACE s_axilite port=incX bundle=control
+	#pragma HLS INTERFACE s_axilite port=b bundle=control
+	#pragma HLS INTERFACE s_axilite port=incY bundle=control
+	#pragma HLS INTERFACE s_axilite port=incOut bundle=control
+	#pragma HLS INTERFACE s_axilite port=return bundle=control
+	#pragma HLS DATAFLOW
+
+	_gemv_transposed(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
+	      b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
+}
+
+extern "C" void dgemv_transposed(
+		const int M,
+		const int N,
+		const double a,
+		const Type<double> memoryIn_A[],
+		const double memoryIn_X[],
+		int incX,
+		const double b,
+		const Type<double> memoryIn_Y[],
+		int incY,
+		Type<double> memoryOut[],
+		int incOut) {
+	#pragma HLS INTERFACE m_axi port=memoryIn_A offset=slave bundle=gmem0
+	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem1
+	#pragma HLS INTERFACE m_axi port=memoryIn_Y offset=slave bundle=gmem2
+	#pragma HLS INTERFACE m_axi port=memoryOut offset=slave bundle=gmem3
+	#pragma HLS INTERFACE s_axilite port=memoryIn_A bundle=control
+	#pragma HLS INTERFACE s_axilite port=memoryIn_X bundle=control
+	#pragma HLS INTERFACE s_axilite port=memoryIn_Y bundle=control
+	#pragma HLS INTERFACE s_axilite port=memoryOut bundle=control
+	#pragma HLS INTERFACE s_axilite port=M bundle=control
+	#pragma HLS INTERFACE s_axilite port=N bundle=control
+	#pragma HLS INTERFACE s_axilite port=a bundle=control
+	#pragma HLS INTERFACE s_axilite port=incX bundle=control
+	#pragma HLS INTERFACE s_axilite port=b bundle=control
+	#pragma HLS INTERFACE s_axilite port=incY bundle=control
+	#pragma HLS INTERFACE s_axilite port=incOut bundle=control
+	#pragma HLS INTERFACE s_axilite port=return bundle=control
+	#pragma HLS DATAFLOW
+
+	_gemv_transposed(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
+	      b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
+}
