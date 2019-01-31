@@ -8,6 +8,14 @@
 #include <VectorElementOperation.h>
 #include <fblas.h>
 
+#ifndef GEMV_SIZE_ROWCHUNK
+#define GEMV_SIZE_ROWCHUNK  16
+#endif
+
+#ifndef GEMV_SIZE_COLCHUNK
+#define GEMV_SIZE_COLCHUNK  16
+#endif
+
 using namespace FBLAS;
 using namespace hlslib;
 
@@ -37,7 +45,7 @@ static void _gemv(
 	Stream<T> Ax("gemv_Ax"), scaledAx("gemv_scaledAx"), scaledY("gemv_scaledY"), inY("gemv_inY"), out("gemv_out");
 	Scalar<T> scalarAx(M, Ax, scaledAx), scalarY(M, inY, scaledY);
 	VectorElementOperation<T, hlslib::op::Add<T>> vectorAddition(M, scaledAx, scaledY, out);
-	MatrixVectorMultiplication<T, 16, WIDTH, WIDTH> matrixVectorMultiplicationAx(N, M, inA, inX, Ax);
+	MatrixVectorMultiplication<T, GEMV_SIZE_ROWCHUNK, GEMV_SIZE_COLCHUNK, WIDTH> matrixVectorMultiplicationAx(N, M, inA, inX, Ax);
 
 	HLSLIB_DATAFLOW_INIT();
 	matrixVectorMultiplicationAx.getReaderA().template readFromMemory<true>(memoryIn_A);
