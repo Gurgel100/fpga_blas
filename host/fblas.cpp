@@ -5,7 +5,6 @@
 #include <hlslib/SDAccel.h>
 #include <vector>
 #include <array>
-#include <iostream>
 #include <algorithm>
 #include <fblas.h>
 
@@ -158,8 +157,7 @@ static void xgemv(std::string func, char TRANS, int M, int N, T ALPHA, const T *
 	int lengthX, lengthY;
 	char transposed = static_cast<char>(tolower(TRANS));
 	if (LDA != N) {
-		std::cerr << "LDA != N is not (yet) supported!" << std::endl;
-		abort();
+		throw std::runtime_error("LDA != N is not (yet) supported!");
 	}
 	if (transposed == 'n') {
 		lengthX = 1 + (N - 1) * abs(INCX);
@@ -169,8 +167,7 @@ static void xgemv(std::string func, char TRANS, int M, int N, T ALPHA, const T *
 		lengthY = 1 + (N - 1) * abs(INCY);
 		func += "_transposed";
 	} else {
-		std::cerr << "Unknown mode: " << TRANS << std::endl;
-		abort();
+		throw std::runtime_error("Unknown mode: " + std::to_string(TRANS));
 	}
 
 	AlignedBuffer<const T> bufferA((size_t) N * M, A), bufferX((size_t) lengthX, X);
