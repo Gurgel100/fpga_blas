@@ -188,9 +188,7 @@ namespace FBLAS {
 
 							if (i == N - 1) {
 								//In the last round we push to the output stream
-								T tmp[width];
-								sums[s].Unpack(tmp);
-								auto res = hlslib::TreeReduce<T, hlslib::op::Add<T>, width>(tmp);
+								auto res = hlslib::TreeReduce<T, hlslib::op::Add<T>, width>(sums[s]);
 								out.Push(res);
 							}
 						}

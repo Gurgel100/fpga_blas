@@ -32,7 +32,6 @@ namespace FBLAS {
 		static void macc(const size_t N, Stream<T> &in_X, Stream<T> &in_Y, Stream<T> &out) {
 			#pragma HLS INLINE
 			T part_sums[num_partial_sums];
-			const T zero = static_cast<U>(0);
 
 			const size_t rounds = N / num_partial_sums;
 			macc_round_loop:
@@ -73,9 +72,7 @@ namespace FBLAS {
 		template <class T, int width, class Operator>
 		static void reduceDataPack(Stream<hlslib::DataPack<T, width>> &in, Stream<T> &out) {
 			#pragma HLS INLINE
-			T tmp[width];
-			auto r = in.Pop();
-			r.Unpack(tmp);
+			auto tmp = in.Pop();
 			T result = hlslib::TreeReduce<T, Operator, width>(tmp);
 			out.Push(result);
 		}

@@ -329,15 +329,12 @@ namespace FBLAS {
 						for (size_t coli = 0; coli < num_columns_per_colchunk; ++coli) {
 							#pragma HLS PIPELINE II=1
 							#pragma HLS LOOP_FLATTEN
-							T tmp_row[size_column];
-
 							if (rowi == 0) {
 								xChunk[coli] = inX.Pop();
 							}
 
 							auto row = inA.Pop() * xChunk[coli];
-							row.Unpack(tmp_row);
-							colres[coli] = hlslib::TreeReduce<T, hlslib::op::Add<T>, size_column>(tmp_row);
+							colres[coli] = hlslib::TreeReduce<T, hlslib::op::Add<T>, size_column>(row);
 						}
 
 						chunkres[rowi] = prevChunkRes + hlslib::TreeReduce<T, hlslib::op::Add<T>, num_columns_per_colchunk>(colres);
