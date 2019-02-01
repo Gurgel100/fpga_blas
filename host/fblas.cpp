@@ -20,13 +20,13 @@ ocl::Program &getProgram();
 
 template <>
 ocl::Program &getProgram<float>() {
-	static ocl::Program program(context, "kernel_fblas_single.xclbin");
+	static ocl::Program program = context.MakeProgram("kernel_fblas_single.xclbin");
 	return program;
 }
 
 template <>
 ocl::Program &getProgram<double>() {
-	static ocl::Program program(context, "kernel_fblas_double.xclbin");
+	static ocl::Program program = context.MakeProgram("kernel_fblas_double.xclbin");
 	return program;
 }
 
