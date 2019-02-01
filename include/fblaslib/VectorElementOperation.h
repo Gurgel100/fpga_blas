@@ -53,6 +53,7 @@ namespace FBLAS {
 		static void calc(const size_t N, Stream<T> &X, Stream<T> &Y, Stream<T> &out) {
 			#pragma HLS INLINE
 			for (size_t i = 0; i < N; ++i) {
+				#pragma HLS PIPELINE II=1
 				out.Push(Op::Apply(X.Pop(), Y.Pop()));
 			}
 		}
