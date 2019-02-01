@@ -20,7 +20,7 @@ find_package(SDAccel REQUIRED)
 find_package(Threads REQUIRED)
 
 include_directories(include include/fblaslib hlslib/include ${CMAKE_BINARY_DIR} ${SDAccel_INCLUDE_DIRS})
-set(KERNEL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(KERNEL_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -gdwarf-4 -Wall -Wextra -Wno-unused-parameter -Wno-unused-label -Wno-unknown-pragmas")
 
 configure_file(include/Config.h.in Config.h)
@@ -69,11 +69,17 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 	endif ()
 	synthesis_target(${KERNEL_NAME} ${KERNEL_ENTRY} ${KERNEL_SRC} ${KERNEL_FLAGS})
 
+	separate_arguments(KERNEL_CXX_FLAGS)
+	separate_arguments(KERNEL_FLAGS)
 	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
 	set(XOCC_FLAGS
 			-O3
 			--kernel ${KERNEL_ENTRY}
 			--platform ${BLAS_DSA_NAME}
+			-I${CMAKE_SOURCE_DIR}/include
+			-I${CMAKE_SOURCE_DIR}/include/fblaslib
+			-I${CMAKE_SOURCE_DIR}/hlslib/include
+			-I${CMAKE_BINARY_DIR}
 			--xp prop:kernel.${KERNEL_ENTRY}.kernel_flags="${KERNEL_FLAGS}"
 			${ARGN})
 
@@ -86,13 +92,18 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 				MATH(EXPR CURRENT_GMEM ${CURRENT_GMEM}+1)
 			endforeach()
 
+			add_custom_target(kernel_${KERNEL_NAME}_hw_emu
+					COMMAND ${SDAccel_XOCC}
+					-g
+					-t hw_emu
+					-o kernel_${KERNEL_NAME}_hw_emu.xclbin
+					${KERNEL_SRC}
+					${XOCC_FLAGS})
+
 			add_custom_target(kernel_${KERNEL_NAME}
 					COMMAND ${SDAccel_XOCC}
 					-t hw
 					-o kernel_${KERNEL_NAME}.xclbin
-					-I${CMAKE_SOURCE_DIR}/include
-					-I${CMAKE_SOURCE_DIR}/hlslib/include
-					-I${CMAKE_BINARY_DIR}
 					${KERNEL_SRC}
 					${XOCC_FLAGS})
 		else()
@@ -107,14 +118,30 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 					--profile_kernel "stall:all:all"
 					--profile_kernel "exec:all:all")
 
+			add_custom_target(compile_kernel_${KERNEL_NAME}_hw_emu
+					COMMAND ${SDAccel_XOCC}
+					-c
+					-g
+					-t hw_emu
+					-o kernel_${KERNEL_NAME}_hw_emu.xo
+					${KERNEL_SRC}
+					${XOCC_FLAGS})
+
+			add_custom_target(kernel_${KERNEL_NAME}_hw_emu
+					COMMAND ${SDAccel_XOCC}
+					-l
+					-g
+					-t hw_emu
+					-o kernel_${KERNEL_NAME}_hw_emu.xclbin
+					kernel_${KERNEL_NAME}_hw_emu.xo
+					${XOCC_FLAGS})
+			add_dependencies(kernel_${KERNEL_NAME}_hw_emu compile_kernel_${KERNEL_NAME}_hw_emu)
+
 			add_custom_target(compile_kernel_${KERNEL_NAME}
 					COMMAND ${SDAccel_XOCC}
 					-c
 					-t hw
 					-o kernel_${KERNEL_NAME}.xo
-					-I${CMAKE_SOURCE_DIR}/include
-					-I${CMAKE_SOURCE_DIR}/hlslib/include
-					-I${CMAKE_BINARY_DIR}
 					${KERNEL_SRC}
 					${XOCC_FLAGS})
 			add_custom_target(kernel_${KERNEL_NAME}
@@ -122,9 +149,6 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 					-l
 					-t hw
 					-o kernel_${KERNEL_NAME}.xclbin
-					-I${CMAKE_SOURCE_DIR}/include
-					-I${CMAKE_SOURCE_DIR}/hlslib/include
-					-I${CMAKE_BINARY_DIR}
 					kernel_${KERNEL_NAME}.xo
 					${XOCC_FLAGS})
 			add_dependencies(kernel_${KERNEL_NAME} compile_kernel_${KERNEL_NAME})
@@ -139,12 +163,19 @@ function(multiple_kernel_compile_target KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 	endif ()
 	synthesis_target(${KERNEL_ENTRY} ${KERNEL_ENTRY} ${KERNEL_SRC} ${KERNEL_FLAGS})
 
+	separate_arguments(KERNEL_CXX_FLAGS)
+	separate_arguments(KERNEL_FLAGS)
 	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
 	set(XOCC_FLAGS
 			#-O3
 			--kernel ${KERNEL_ENTRY}
 			--platform ${BLAS_DSA_NAME}
 			--xp prop:kernel.${KERNEL_ENTRY}.kernel_flags="${KERNEL_FLAGS}"
+			-I${CMAKE_SOURCE_DIR}/include
+			-I${CMAKE_SOURCE_DIR}/include/fblaslib
+			-I${CMAKE_SOURCE_DIR}/hlslib/include
+			-I${CMAKE_BINARY_DIR}
+			${KERNEL_SRC}
 			${ARGN})
 
 	if(SDAccel_FOUND)
@@ -154,16 +185,19 @@ function(multiple_kernel_compile_target KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 					--profile_kernel "stall:all:all"
 					--profile_kernel "exec:all:all")
 		endif()
+		add_custom_target(compile_multiple_kernel_${KERNEL_ENTRY}_hw_emu
+				COMMAND ${SDAccel_XOCC}
+				-c
+				-g
+				-t hw_emu
+				-o kernel_${KERNEL_ENTRY}.xo
+				${XOCC_FLAGS})
+
 		add_custom_target(compile_multiple_kernel_${KERNEL_ENTRY}
 				COMMAND ${SDAccel_XOCC}
 				-c
 				-t hw
 				-o kernel_${KERNEL_ENTRY}.xo
-				-I${CMAKE_SOURCE_DIR}/include
-				-I${CMAKE_SOURCE_DIR}/include/fblaslib
-				-I${CMAKE_SOURCE_DIR}/hlslib/include
-				-I${CMAKE_BINARY_DIR}
-				${KERNEL_SRC}
 				${XOCC_FLAGS})
 	endif()
 endfunction(multiple_kernel_compile_target)
@@ -180,12 +214,14 @@ function(multiple_kernel_link_target KERNEL_NAME XOCC_FLAGS)
 
 	if(SDAccel_FOUND)
 		set(DEPENDENCIES "")
+		set(DEPENDENCIES_HW_EMU "")
 		set(ARG_NUM 2)  # current argument index
 		while(ARG_NUM LESS ARGC)
 			set(KERNEL_FILE ${ARGV${ARG_NUM}})
 			set(XOCC_FLAGS ${XOCC_FLAGS}
 					kernel_${KERNEL_FILE}.xo)
 			list(APPEND DEPENDENCIES compile_multiple_kernel_${KERNEL_FILE})
+			list(APPEND DEPENDENCIES_HW_EMU compile_multiple_kernel_${KERNEL_FILE}_hw_emu)
 			math(EXPR ARG_NUM "${ARG_NUM}+1")
 
 			set(BANK_MAPPING ${ARGV${ARG_NUM}})
@@ -213,16 +249,22 @@ function(multiple_kernel_link_target KERNEL_NAME XOCC_FLAGS)
 			endif()
 		endwhile()
 
+		add_custom_target(kernel_${KERNEL_NAME}_hw_emu
+				COMMAND ${SDAccel_XOCC}
+				-l
+				-g
+				-t hw_emu
+				-o kernel_${KERNEL_NAME}_hw_emu.xclbin
+				${XOCC_FLAGS})
+
 		add_custom_target(kernel_${KERNEL_NAME}
 			COMMAND ${SDAccel_XOCC}
 			-l
 			-t hw
 			-o kernel_${KERNEL_NAME}.xclbin
-			-I${CMAKE_SOURCE_DIR}/include
-			-I${CMAKE_SOURCE_DIR}/hlslib/include
-			-I${CMAKE_BINARY_DIR}
 			${XOCC_FLAGS})
 
+		add_dependencies(kernel_${KERNEL_NAME}_hw_emu ${DEPENDENCIES_HW_EMU})
 		add_dependencies(kernel_${KERNEL_NAME} ${DEPENDENCIES})
 	endif()
 endfunction(multiple_kernel_link_target)
