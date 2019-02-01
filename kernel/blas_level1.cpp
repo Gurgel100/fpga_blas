@@ -15,8 +15,6 @@ using namespace hlslib;
 template <class T>
 using Type = typename std::conditional<WIDTH == 1, T, hlslib::DataPack<T, WIDTH>>::type;
 
-
-
 /*
  * Scalar
  */
@@ -25,7 +23,7 @@ static void _scal(const size_t N, const T alpha, const Type<T> memoryIn_X[], con
 #pragma HLS INLINE
 
 	Stream<Type<T>> inX("scal_inX"), out("scal_out");
-	Scalar<T, WIDTH> scalar(N, inX, out);
+	PackedScalar<T, WIDTH> scalar(N, inX, out);
 
 	HLSLIB_DATAFLOW_INIT();
 	scalar.getReaderX().template readFromMemory<true>(memoryIn_X, incX);
@@ -72,7 +70,7 @@ static void _axpy(const size_t N, const T a, const Type<T> memoryIn_X[], const s
 	#pragma HLS INLINE
 
 	Stream<Type<T>> inX("axpy_inX"), intermediateX("aspy_intermediateX"), inY("axpy_inY"), out("axpy_out");
-	Scalar<T, WIDTH> scalar(N, inX, intermediateX);
+	PackedScalar<T, WIDTH> scalar(N, inX, intermediateX);
 	VectorElementOperation<Type<T>, hlslib::op::Add<Type<T>>> vectorOperation(N, intermediateX, inY, out);
 
 	HLSLIB_DATAFLOW_INIT();
@@ -181,7 +179,7 @@ static void _nrm2(const size_t N, const Type<T> memoryIn_X[], const size_t incX,
 
 	Stream<Type<T>> inX("nrm2_inX");
 	Stream<T> out("nrm2_out");
-	Norm<T, WIDTH> norm(N, inX, out);
+	PackedNorm<T, WIDTH> norm(N, inX, out);
 
 	HLSLIB_DATAFLOW_INIT();
 	norm.getReader().template readFromMemory<true>(memoryIn_X, incX);
