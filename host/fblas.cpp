@@ -68,7 +68,7 @@ private:
 	const size_t realN;
 	size_t N;
 	const bool writeback;
-	std::vector<Type> _data;
+	std::vector<Type, ocl::AlignedAllocator<T, 4096>> _data;
 	T *origin, *data_ptr;
 
 	static size_t roundUp(size_t size, size_t multiple) {
