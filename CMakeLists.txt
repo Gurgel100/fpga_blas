@@ -73,7 +73,7 @@ function(kernel_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS BANK_MAP
 	separate_arguments(KERNEL_FLAGS)
 	set(KERNEL_FLAGS ${KERNEL_CXX_FLAGS} -DHLSLIB_SYNTHESIS ${KERNEL_FLAGS})
 	set(XOCC_FLAGS
-			-O3
+			#-O3
 			--kernel ${KERNEL_ENTRY}
 			--platform ${BLAS_DSA_NAME}
 			-I${CMAKE_SOURCE_DIR}/include
