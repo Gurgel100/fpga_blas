@@ -275,6 +275,8 @@ kernel_target("dot_32" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_
 
 kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0"
 		--kernel_frequency 200)
+kernel_target("dot_multiple_32" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_WIDTH=32" "0;1;0"
+		--kernel_frequency 200)
 
 kernel_target("gemv" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
 kernel_target("gemv_32_16_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2")
