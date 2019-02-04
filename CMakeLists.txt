@@ -312,7 +312,7 @@ if(SDAccel_FOUND)
 	add_test(RunDot RunDot)
 
 	add_executable(PerfDot test/PerfDot.cpp)
-	target_link_libraries(PerfDot ${SDAccel_LIBRARIES})
+	target_link_libraries(PerfDot ${SDAccel_LIBRARIES} blas)
 
 	add_executable(RunGemv test/RunGemv.cpp)
 	target_link_libraries(RunGemv ${SDAccel_LIBRARIES} blas)
