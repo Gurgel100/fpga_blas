@@ -55,7 +55,8 @@ private:
 	T *mem;
 };
 
-static pair<double, double> execute(size_t N, size_t M, const vector<Type_t> &inputHostA, const vector<Type_t> &inputHostX, vector<Type_t> &outputHost) {
+template <class Allocator>
+static pair<double, double> execute(size_t N, size_t M, const vector<Type_t, Allocator> &inputHostA, const vector<Type_t, Allocator> &inputHostX, vector<Type_t, Allocator> &outputHost) {
 	SharedContent<double> shared_time(NAN), shared_variance(0);
 
 	pid_t child = fork();
@@ -123,7 +124,7 @@ int main(int argc, const char *argv[]) {
 		for (size_t M = 16; M < 1 << 30; M *= 2) {
 			cout << "N = " << N << ", M = " << M << ": ";
 			try {
-				vector<Type_t> inputHostA(N * M, 1), inputHostX(N, 1), outputHost(M);
+				vector<Type_t, ocl::AlignedAllocator<Type_t, 4096>> inputHostA(N * M, 1), inputHostX(N, 1), outputHost(M);
 
 				auto stats = execute(N, M, inputHostA, inputHostX, outputHost);
 
