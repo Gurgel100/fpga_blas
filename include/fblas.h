@@ -5,7 +5,9 @@
 #ifndef BLAS_HLS_BLAS_H
 #define BLAS_HLS_BLAS_H
 
+#ifndef WIDTH
 #define WIDTH   16
+#endif
 
 #define BLAS_FUNCTION(func)   fblas_##func
 
