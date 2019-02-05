@@ -62,6 +62,7 @@ static void _gemv(
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
+#ifndef FBLAS_DISABLE_SINGLE
 extern "C" void sgemv(
 		const int M,
 		const int N,
@@ -95,7 +96,9 @@ extern "C" void sgemv(
 	_gemv(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
 			b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
+#endif
 
+#ifndef FBLAS_DISABLE_DOUBLE
 extern "C" void dgemv(
 		const int M,
 		const int N,
@@ -129,7 +132,7 @@ extern "C" void dgemv(
 	_gemv(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
 	      b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
-
+#endif
 
 
 /*
@@ -173,6 +176,7 @@ static void _gemv_transposed(
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
+#ifndef FBLAS_DISABLE_SINGLE
 extern "C" void sgemv_transposed(
 		const int M,
 		const int N,
@@ -206,7 +210,9 @@ extern "C" void sgemv_transposed(
 	_gemv_transposed(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
 	      b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
+#endif
 
+#ifndef FBLAS_DISABLE_DOUBLE
 extern "C" void dgemv_transposed(
 		const int M,
 		const int N,
@@ -240,3 +246,4 @@ extern "C" void dgemv_transposed(
 	_gemv_transposed(static_cast<const size_t>(M), static_cast<const size_t>(N), a, memoryIn_A, memoryIn_X, static_cast<const size_t>(incX),
 	      b, memoryIn_Y, static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
+#endif

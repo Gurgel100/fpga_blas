@@ -13,7 +13,7 @@ using namespace FBLAS;
 using namespace hlslib;
 
 template <class T>
-using Type = typename std::conditional<WIDTH == 1, T, hlslib::DataPack<T, WIDTH>>::type;
+using Type = hlslib::DataPack<T, WIDTH>;
 
 /*
  * Scalar
@@ -32,6 +32,7 @@ static void _scal(const size_t N, const T alpha, const Type<T> memoryIn_X[], con
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
+#ifndef FBLAS_DISABLE_SINGLE
 extern "C"
 void sscal(const int N, const float alpha, const Type<float> memoryIn_X[], int incX, Type<float> memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -46,7 +47,9 @@ void sscal(const int N, const float alpha, const Type<float> memoryIn_X[], int i
 
 	_scal(static_cast<const size_t>(N), alpha, memoryIn_X, static_cast<const size_t>(incX), memoryOut);
 }
+#endif
 
+#ifndef FBLAS_DISABLE_DOUBLE
 extern "C"
 void dscal(const int N, const double alpha, const Type<double> memoryIn_X[], int incX, Type<double> memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -61,6 +64,8 @@ void dscal(const int N, const double alpha, const Type<double> memoryIn_X[], int
 
 	_scal(static_cast<const size_t>(N), alpha, memoryIn_X, static_cast<const size_t>(incX), memoryOut);
 }
+#endif
+
 
 /*
  * AXPY
@@ -82,6 +87,7 @@ static void _axpy(const size_t N, const T a, const Type<T> memoryIn_X[], const s
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
+#ifndef FBLAS_DISABLE_SINGLE
 extern "C"
 void saxpy(const int N, const float a, const Type<float> memoryIn_X[], int incX, const Type<float> memoryIn_Y[], int incY, Type<float> memoryOut[], int incOut) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -101,7 +107,9 @@ void saxpy(const int N, const float a, const Type<float> memoryIn_X[], int incX,
 	_axpy(static_cast<const size_t>(N), a, memoryIn_X, static_cast<const size_t>(incX), memoryIn_Y,
 	      static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
+#endif
 
+#ifndef FBLAS_DISABLE_DOUBLE
 extern "C"
 void daxpy(const int N, const double a, const Type<double> memoryIn_X[], int incX, const Type<double> memoryIn_Y[], int incY, Type<double> memoryOut[], int incOut) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -121,6 +129,7 @@ void daxpy(const int N, const double a, const Type<double> memoryIn_X[], int inc
 	_axpy(static_cast<const size_t>(N), a, memoryIn_X, static_cast<const size_t>(incX), memoryIn_Y,
 	      static_cast<const size_t>(incY), memoryOut, static_cast<const size_t>(incOut));
 }
+#endif
 
 
 /*
@@ -142,6 +151,7 @@ static void _dot(const size_t N, typename DotProduct<T, WIDTH>::Chunk const memo
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
+#ifndef FBLAS_DISABLE_SINGLE
 extern "C"
 void sdot(const int N, typename DotProduct<float, WIDTH>::Chunk const memoryIn_X[], typename DotProduct<float, WIDTH>::Chunk const memoryIn_Y[], float memoryOut[1]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -156,7 +166,9 @@ void sdot(const int N, typename DotProduct<float, WIDTH>::Chunk const memoryIn_X
 
 	_dot(static_cast<const size_t>(N), memoryIn_X, memoryIn_Y, memoryOut);
 }
+#endif
 
+#ifndef FBLAS_DISABLE_DOUBLE
 extern "C"
 void ddot(const int N, typename DotProduct<double, WIDTH>::Chunk const memoryIn_X[], typename DotProduct<double, WIDTH>::Chunk const memoryIn_Y[], double memoryOut[1]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -171,6 +183,7 @@ void ddot(const int N, typename DotProduct<double, WIDTH>::Chunk const memoryIn_
 
 	_dot(static_cast<const size_t>(N), memoryIn_X, memoryIn_Y, memoryOut);
 }
+#endif
 
 /* Norm */
 template <class T>
@@ -188,6 +201,7 @@ static void _nrm2(const size_t N, const Type<T> memoryIn_X[], const size_t incX,
 	HLSLIB_DATAFLOW_FINALIZE();
 }
 
+#ifndef FBLAS_DISABLE_SINGLE
 extern "C"
 void snrm2(const int N, const Type<float> memoryIn_X[], int incX, float memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -201,7 +215,9 @@ void snrm2(const int N, const Type<float> memoryIn_X[], int incX, float memoryOu
 
 	_nrm2(static_cast<const size_t>(N), memoryIn_X, static_cast<const size_t>(incX), memoryOut);
 }
+#endif
 
+#ifndef FBLAS_DISABLE_DOUBLE
 extern "C"
 void dnrm2(const int N, const Type<double> memoryIn_X[], int incX, double memoryOut[]) {
 	#pragma HLS INTERFACE m_axi port=memoryIn_X offset=slave bundle=gmem0
@@ -215,3 +231,4 @@ void dnrm2(const int N, const Type<double> memoryIn_X[], int incX, double memory
 
 	_nrm2(static_cast<const size_t>(N), memoryIn_X, static_cast<const size_t>(incX), memoryOut);
 }
+#endif
