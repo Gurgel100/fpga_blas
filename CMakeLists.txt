@@ -203,6 +203,7 @@ function(multiple_kernel_compile_target KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
 endfunction(multiple_kernel_compile_target)
 
 function(multiple_kernel_link_target KERNEL_NAME XOCC_FLAGS)
+	separate_arguments(XOCC_FLAGS)
 	set(XOCC_FLAGS ${XOCC_FLAGS}
 			#-O3
 			--platform ${BLAS_DSA_NAME})
