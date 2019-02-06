@@ -297,7 +297,7 @@ multiple_kernel_compile_target("sdot" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp
 multiple_kernel_compile_target("snrm2" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=32 -DFBLAS_DISABLE_DOUBLE" --kernel_frequency 200)
 multiple_kernel_compile_target("sgemv" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "-DWIDTH=32 -DGEMV_SIZE_COLCHUNK=256 -DGEMV_SIZE_ROWCHUNK=64 -DFBLAS_DISABLE_DOUBLE" --kernel_frequency 200)
 multiple_kernel_compile_target("sgemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "-DWIDTH=32 -DGEMV_SIZE_COLCHUNK=256 -DGEMV_SIZE_ROWCHUNK=64 -DFBLAS_DISABLE_DOUBLE" --kernel_frequency 200)
-multiple_kernel_link_target("fblas_single" "" "sdot" "0;1;2" "snrm2" "0;1" "sgemv" "0;1;2;3" "sgemv_transposed" "0;1;2;3")
+multiple_kernel_link_target("fblas_single" "--kernel_frequency 200" "sdot" "0;1;2" "snrm2" "0;1" "sgemv" "0;1;2;3" "sgemv_transposed" "0;1;2;3")
 
 multiple_kernel_compile_target("dscal" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=16 -DFBLAS_DISABLE_SINGLE" --kernel_frequency 200)
 multiple_kernel_compile_target("daxpy" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=16 -DFBLAS_DISABLE_SINGLE" --kernel_frequency 200)
@@ -305,7 +305,7 @@ multiple_kernel_compile_target("ddot" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp
 multiple_kernel_compile_target("dnrm2" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=16 -DFBLAS_DISABLE_SINGLE" --kernel_frequency 200)
 multiple_kernel_compile_target("dgemv" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "-DWIDTH=16 -DGEMV_SIZE_COLCHUNK=128 -DGEMV_SIZE_ROWCHUNK=32 -DFBLAS_DISABLE_SINGLE" --kernel_frequency 200)
 multiple_kernel_compile_target("dgemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "-DWIDTH=16 -DGEMV_SIZE_COLCHUNK=128 -DGEMV_SIZE_ROWCHUNK=32 -DFBLAS_DISABLE_SINGLE" --kernel_frequency 200)
-multiple_kernel_link_target("fblas_double" "" "ddot" "0;1;2" "dnrm2" "0;1" "dgemv" "0;1;2;3" "dgemv_transposed" "0;1;2;3")
+multiple_kernel_link_target("fblas_double" "--kernel_frequency 200" "ddot" "0;1;2" "dnrm2" "0;1" "dgemv" "0;1;2;3" "dgemv_transposed" "0;1;2;3")
 
 if(SDAccel_FOUND)
 	add_executable(RunDot test/RunDot.cpp)
