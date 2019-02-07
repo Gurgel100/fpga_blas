@@ -291,6 +291,9 @@ kernel_target("gemv_transposed_16_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_D
 kernel_target("gemv_transposed_32_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
 kernel_target("gemv_transposed_16_64_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64" "0;1;2")
 
+kernel_target("scalar" "scalar" ${CMAKE_SOURCE_DIR}/kernel/scalar.cpp "-DWIDTH=16" "0;1" --kernel_frequency 200)
+kernel_target("scalar_32" "scalar" ${CMAKE_SOURCE_DIR}/kernel/scalar.cpp "-DWIDTH=32" "0;1" --kernel_frequency 200)
+
 multiple_kernel_compile_target("sscal" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=32 -DFBLAS_DISABLE_DOUBLE" --kernel_frequency 200)
 multiple_kernel_compile_target("saxpy" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=32 -DFBLAS_DISABLE_DOUBLE" --kernel_frequency 200)
 multiple_kernel_compile_target("sdot" ${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp "-DWIDTH=32 -DFBLAS_DISABLE_DOUBLE" --kernel_frequency 200)
@@ -314,6 +317,9 @@ if(SDAccel_FOUND)
 
 	add_executable(PerfDot test/PerfDot.cpp)
 	target_link_libraries(PerfDot ${SDAccel_LIBRARIES} blas)
+
+	add_executable(PerfScalar test/PerfScalar.cpp)
+	target_link_libraries(PerfScalar ${SDAccel_LIBRARIES} blas)
 
 	add_executable(RunGemv test/RunGemv.cpp)
 	target_link_libraries(RunGemv ${SDAccel_LIBRARIES} blas)
