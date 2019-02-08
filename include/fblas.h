@@ -15,6 +15,9 @@
 extern "C" {
 #endif
 
+	void prepareFPGAForSingle();
+	void prepareFPGAForDouble();
+
 	// Level 1
 	void BLAS_FUNCTION(saxpy)(int N, float ALPHA, const float *X, int INCX, float *Y, int INCY);
 	void BLAS_FUNCTION(daxpy)(int N, double ALPHA, const double *X, int INCX, double *Y, int INCY);

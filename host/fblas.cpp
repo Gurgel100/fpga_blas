@@ -8,11 +8,9 @@
 #include <algorithm>
 #include <fblas.h>
 
-#define BLAS_WIDTH  16
-
 using namespace hlslib;
 
-static ocl::Context context;
+static ocl::Context &context = ocl::GlobalContext();
 
 template <class T>
 ocl::Program &getProgram();
@@ -29,7 +27,7 @@ ocl::Program &getProgram<double>() {
 	return program;
 }
 
-template <class T, size_t width = BLAS_WIDTH>
+template <class T, size_t width = WIDTH>
 class AlignedBuffer {
 public:
 	AlignedBuffer(size_t N, T *data, bool writeback = !std::is_const<T>()) : realN(N), writeback(writeback), origin(data), data_ptr(data) {
@@ -76,6 +74,14 @@ private:
 		return size + multiple - remainder;
 	}
 };
+
+void prepareFPGAForSingle() {
+	getProgram<float>();
+}
+
+void prepareFPGAForDouble() {
+	getProgram<double>();
+}
 
 // Level 1
 template <class T>
