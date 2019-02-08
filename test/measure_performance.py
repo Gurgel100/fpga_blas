@@ -53,7 +53,7 @@ if __name__ == "__main__":
 					total_time += t
 					min_time = min(min_time, t)
 					max_time = max(max_time, t)
-					times[] = t
+					times.append(t)
 				elif i == 0:
 					if header == "read data":
 						read_data = int(d)
