@@ -16,7 +16,7 @@ if __name__ == "__main__":
 		read_data = 0
 		written_data = 0
 		total_time = 0.0
-		variance_time = 0.0
+		times = []
 		min_time = float("inf")
 		max_time = float("-inf")
 		additional_data = {}
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 					total_time += t
 					min_time = min(min_time, t)
 					max_time = max(max_time, t)
-					variance_time += t * t
+					times[] = t
 				elif i == 0:
 					if header == "read data":
 						read_data = int(d)
@@ -62,8 +62,14 @@ if __name__ == "__main__":
 					else:
 						additional_data[header] = d
 
+		avg_time = total_time / number_of_samples
+		variance_time = 0.0
+		for t in times:
+			tmp = t - avg_time
+			variance_time += tmp * tmp
+
 		print("samples, read data, written data, avg time, min time, max time, variance time, %s" % ", ".join(additional_data.keys()))
-		print(number_of_samples, read_data, written_data, total_time / number_of_samples, min_time, max_time, variance_time, sep=", ", end=", ")
+		print(number_of_samples, read_data, written_data, avg_time, min_time, max_time, variance_time, sep=", ", end=", ")
 		print(", ".join(additional_data.values()))
 
 	except subprocess.CalledProcessError as e:
