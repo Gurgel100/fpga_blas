@@ -50,7 +50,7 @@ else()
   set(BLAS_TARGET_TIMING "300MHz")
 endif()
 
-add_custom_target(delete_hls_project_dir rm -r ${CMAKE_BINARY_DIR}/${BLAS_PROJECT_NAME})
+add_custom_target(delete_hls_project_dir rm -rf ${CMAKE_BINARY_DIR}/${BLAS_PROJECT_NAME})
 
 # Synthesis target
 function(synthesis_target KERNEL_NAME KERNEL_ENTRY KERNEL_SRC KERNEL_FLAGS)
