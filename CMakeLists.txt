@@ -271,25 +271,27 @@ function(multiple_kernel_link_target KERNEL_NAME XOCC_FLAGS)
 endfunction(multiple_kernel_link_target)
 
 # Test kernels
-kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0")
-kernel_target("dot_32" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_WIDTH=32" "0;1;0")
+kernel_target("dot" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0" --kernel_frequency 200)
+kernel_target("dot_32" "blas_dot" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_WIDTH=32" "0;1;0" --kernel_frequency 200)
 
 kernel_target("dot_multiple" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "" "0;1;0"
 		--kernel_frequency 200)
 kernel_target("dot_multiple_32" "blas_dot_multiple" ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp "-DDOT_WIDTH=32" "0;1;0"
 		--kernel_frequency 200)
 
-kernel_target("gemv" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
-kernel_target("gemv_32_16_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2")
-kernel_target("gemv_16_32_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
-kernel_target("gemv_32_32_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
-kernel_target("gemv_16_64_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64 -DGEMV_SIZE_COLUMN=16" "0;1;2")
+kernel_target("gemv" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_32_16_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_16_32_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_32_32_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_16_64_16" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64 -DGEMV_SIZE_COLUMN=16" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_64_256_32" "blas_gemv" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=64 -DGEMV_SIZE_COLCHUNK=256 -DGEMV_SIZE_COLUMN=32" "0;1;2" --kernel_frequency 200)
 
-kernel_target("gemv_transposed" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2")
-kernel_target("gemv_transposed_32_16_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2")
-kernel_target("gemv_transposed_16_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
-kernel_target("gemv_transposed_32_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2")
-kernel_target("gemv_transposed_16_64_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64" "0;1;2")
+kernel_target("gemv_transposed" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_transposed_32_16_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_transposed_16_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_transposed_32_32_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=32 -DGEMV_SIZE_COLCHUNK=32 -DGEMV_SIZE_COLUMN=16" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_transposed_16_64_16" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_COLCHUNK=64" "0;1;2" --kernel_frequency 200)
+kernel_target("gemv_transposed_64_256_32" "blas_gemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp "-DGEMV_SIZE_ROWCHUNK=64 -DGEMV_SIZE_COLCHUNK=256 -DGEMV_SIZE_COLUMN=32" "0;1;2" --kernel_frequency 200)
 
 kernel_target("scalar" "scalar" ${CMAKE_SOURCE_DIR}/kernel/scalar.cpp "-DWIDTH=16" "0;1" --kernel_frequency 200)
 kernel_target("scalar_32" "scalar" ${CMAKE_SOURCE_DIR}/kernel/scalar.cpp "-DWIDTH=32" "0;1" --kernel_frequency 200)
