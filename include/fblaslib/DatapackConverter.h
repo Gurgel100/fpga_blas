@@ -70,9 +70,10 @@ namespace FBLAS {
 					if (current_out >= width_to) {
 						out.Push(tmp);
 						current_out = 0;
+						tmp = T();
 					}
 				}
-				if (i == N - 1 && current_out < width_to) {
+				if (i == N - 1 && current_out > 0) {
 					out.Push(tmp);
 				}
 			}
