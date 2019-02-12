@@ -32,7 +32,10 @@ set(BLAS_KERNEL_SRC
 	    ${CMAKE_SOURCE_DIR}/src/DotProduct.cpp
 		${CMAKE_SOURCE_DIR}/kernel/GEMV.cpp
 		${CMAKE_SOURCE_DIR}/kernel/blas_level1.cpp
-		${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp)
+		${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp
+		${CMAKE_SOURCE_DIR}/kernel/scalar.cpp
+		${CMAKE_SOURCE_DIR}/kernel/benchmark.cpp
+		${CMAKE_SOURCE_DIR}/kernel/benchmark2.cpp)
 add_library(fpgablas ${BLAS_KERNEL_SRC})
 target_link_libraries(fpgablas ${CMAKE_THREAD_LIBS_INIT})
 
@@ -312,6 +315,10 @@ multiple_kernel_compile_target("dgemv" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cp
 multiple_kernel_compile_target("dgemv_transposed" ${CMAKE_SOURCE_DIR}/kernel/blas_level2.cpp "-DWIDTH=16 -DGEMV_SIZE_COLCHUNK=128 -DGEMV_SIZE_ROWCHUNK=32 -DFBLAS_DISABLE_SINGLE" --kernel_frequency 200)
 multiple_kernel_link_target("fblas_double" "--kernel_frequency 200" "ddot" "0;1;2" "dnrm2" "0;1" "dgemv" "0;1;2;3" "dgemv_transposed" "0;1;2;3")
 
+kernel_target("benchmark" "benchmark" ${CMAKE_SOURCE_DIR}/kernel/benchmark.cpp "" "0;1;2;3")
+kernel_target("benchmark2_float" "benchmark2" ${CMAKE_SOURCE_DIR}/kernel/benchmark2.cpp "-DDATATYPE=float -DWIDTH=32 -DSIZE_COLCHUNK=256 -DSIZE_ROWCHUNK=64" "0;1;2;3" --kernel_frequency 200)
+kernel_target("benchmark2_double" "benchmark2" ${CMAKE_SOURCE_DIR}/kernel/benchmark2.cpp "-DDATATYPE=double -DWIDTH=16" "0;1;2;3" --kernel_frequency 200)
+
 if(SDAccel_FOUND)
 	add_executable(RunDot test/RunDot.cpp)
 	target_link_libraries(RunDot ${SDAccel_LIBRARIES} blas)
@@ -337,3 +344,13 @@ if(SDAccel_FOUND)
 	add_custom_target(kernel_all)
 	add_dependencies(kernel_all kernel_dot kernel_dot_multiple)
 endif()
+
+add_executable(Benchmark host/benchmark.cpp)
+target_link_libraries(Benchmark fblas blas ${SDAccel_LIBRARIES})
+
+add_executable(Benchmark2 host/benchmark2.cpp)
+target_link_libraries(Benchmark2 fblas blas ${SDAccel_LIBRARIES})
+
+add_executable(TestBenchmark test/TestBenchmark.cpp)
+target_link_libraries(TestBenchmark ${SDAccel_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} fpgablas blas)
+add_test(TestBenchmark TestBenchmark)
