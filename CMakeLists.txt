@@ -333,6 +333,9 @@ if(SDAccel_FOUND)
 	add_executable(PerfDot test/PerfDot.cpp)
 	target_link_libraries(PerfDot ${SDAccel_LIBRARIES} blas)
 
+	add_executable(PerfInterleavedDot test/PerfInterleavedDot.cpp)
+	target_link_libraries(PerfInterleavedDot ${SDAccel_LIBRARIES})
+
 	add_executable(PerfScalar test/PerfScalar.cpp)
 	target_link_libraries(PerfScalar ${SDAccel_LIBRARIES} blas)
 
@@ -345,6 +348,10 @@ if(SDAccel_FOUND)
 
 	add_library(fblas ${CMAKE_SOURCE_DIR}/host/fblas.cpp)
 	target_link_libraries(fblas ${SDAccel_LIBRARIES})
+
+	add_executable(TestFBLAS ${CMAKE_SOURCE_DIR}/test/TestFBLAS.cpp)
+	target_link_libraries(TestFBLAS blas fblas)
+	add_test(TestFBLAS TestFBLAS)
 
 	# Target for building all kernels
 	add_custom_target(kernel_all)
