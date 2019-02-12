@@ -4,10 +4,16 @@
 cmake_minimum_required(VERSION 2.8)
 project(blas_hls C CXX)
 
+# Uncomment if needed
+#set(SDACCEL_ROOT_DIR /opt/Xilinx/SDx/2018.2)
+
 # Target options
-set(BLAS_PART_NAME "xcku115-flvb2104-2-e" CACHE STRING "Part name for HLS.")
-set(BLAS_DSA_NAME "xilinx:xil-accel-rd-ku115:4ddr-xpr:4.0" CACHE STRING
-    "DSA string for xocc.")
+set(BLAS_PART_NAME "xcvu9p-flgb2104-2-i" CACHE STRING "Part name for HLS.")
+set(BLAS_DSA_NAME "xilinx:vcu1525:dynamic:5.1" CACHE STRING
+		"DSA string for xocc.")
+#set(BLAS_PART_NAME "xcku115-flvb2104-2-e" CACHE STRING "Part name for HLS.")
+#set(BLAS_DSA_NAME "xilinx:xil-accel-rd-ku115:4ddr-xpr:4.0" CACHE STRING
+#    "DSA string for xocc.")
 set(BLAS_TARGET_CLOCK 300 CACHE STRING "Target clock for kernel (<=0 uses DSA default).")
 set(BLAS_TARGET_CLOCK_UNCERTAINTY 0.90 CACHE STRING "Clock uncertainty for HLS.")
 
